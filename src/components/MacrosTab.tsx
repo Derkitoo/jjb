@@ -22,7 +22,8 @@ const GOAL_OPTIONS = Object.entries(NUTRITION_GOAL_LABELS) as [
 ][];
 
 export default function MacrosTab() {
-  const { nutritionProfile, updateNutritionProfile, weighIns } = useData();
+  const { nutritionProfile, updateNutritionProfile, weighIns, addWeighIn } =
+    useData();
   const [heightCm, setHeightCm] = useState(
     nutritionProfile.heightCm != null ? String(nutritionProfile.heightCm) : ""
   );
@@ -35,9 +36,13 @@ export default function MacrosTab() {
   );
   const [goal, setGoal] = useState<NutritionGoalType>(nutritionProfile.goal);
   const [saved, setSaved] = useState(false);
+  const [quickWeight, setQuickWeight] = useState("");
 
   const latestWeight = weighIns[0]?.weightKg;
   const targets = computeDailyTargets(latestWeight, nutritionProfile);
+  const profileComplete = Boolean(
+    nutritionProfile.heightCm && nutritionProfile.age && nutritionProfile.sex
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +55,16 @@ export default function MacrosTab() {
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  function handleQuickWeight(e: React.FormEvent) {
+    e.preventDefault();
+    if (!quickWeight.trim()) return;
+    addWeighIn({
+      date: new Date().toISOString().slice(0, 10),
+      weightKg: Number(quickWeight),
+    });
+    setQuickWeight("");
   }
 
   return (
@@ -72,10 +87,33 @@ export default function MacrosTab() {
             <MacroChip label="Lip (g)" value={targets.fat} />
           </div>
         </Card>
-      ) : (
+      ) : !profileComplete ? (
         <Card className="text-sm text-muted">
-          Renseigne ta taille, ton âge et ton sexe ci-dessous, et ajoute au
-          moins une pesée sur la page Réglages, pour obtenir une estimation.
+          Renseigne ta taille, ton âge et ton sexe ci-dessous pour obtenir une
+          estimation.
+        </Card>
+      ) : (
+        <Card className="space-y-3">
+          <p className="text-sm text-muted">
+            Profil enregistré ✓ — il ne manque plus qu&apos;un poids actuel
+            pour calculer tes besoins :
+          </p>
+          <form onSubmit={handleQuickWeight} className="flex gap-2">
+            <input
+              type="number"
+              step={0.1}
+              value={quickWeight}
+              onChange={(e) => setQuickWeight(e.target.value)}
+              placeholder="Ton poids (kg)"
+              className="flex-1 bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
+            />
+            <button
+              type="submit"
+              className="shrink-0 h-10 px-4 rounded-full bg-accent-2 text-white font-semibold text-sm"
+            >
+              Ajouter
+            </button>
+          </form>
         </Card>
       )}
 
