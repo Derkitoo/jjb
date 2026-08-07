@@ -114,6 +114,7 @@ export interface Technique {
   category: TechniqueCategory;
   status: MasteryStatus;
   notes?: string;
+  videoUrl?: string;
   custom?: boolean;
 }
 
@@ -122,10 +123,52 @@ export interface Goals {
   targetWeightKg: number | null;
 }
 
+export type Sex = "homme" | "femme";
+
+export type ActivityLevel =
+  | "sedentaire"
+  | "leger"
+  | "modere"
+  | "actif"
+  | "tres_actif";
+
+export const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
+  sedentaire: "Sédentaire (peu ou pas de sport)",
+  leger: "Léger (1-2 séances/semaine)",
+  modere: "Modéré (3-4 séances/semaine)",
+  actif: "Actif (5-6 séances/semaine)",
+  tres_actif: "Très actif (entraînement biquotidien)",
+};
+
+export type NutritionGoalType = "perte" | "maintien" | "prise_masse";
+
+export const NUTRITION_GOAL_LABELS: Record<NutritionGoalType, string> = {
+  perte: "Perte de poids",
+  maintien: "Maintien",
+  prise_masse: "Prise de masse",
+};
+
+export interface NutritionProfile {
+  heightCm: number | null;
+  age: number | null;
+  sex: Sex | null;
+  activityLevel: ActivityLevel;
+  goal: NutritionGoalType;
+}
+
+export interface WeightCut {
+  competitionName: string;
+  competitionDate: string | null; // yyyy-mm-dd
+  targetWeightKg: number | null;
+  notes: string;
+}
+
 export interface AppData {
   sessions: TrainingSession[];
   recipes: Recipe[];
   weighIns: WeighIn[];
   techniques: Technique[];
   goals: Goals;
+  nutritionProfile: NutritionProfile;
+  weightCut: WeightCut;
 }

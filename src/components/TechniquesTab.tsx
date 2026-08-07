@@ -157,10 +157,17 @@ function TechniqueRow({
 }) {
   const [open, setOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState(technique.notes ?? "");
+  const [videoDraft, setVideoDraft] = useState(technique.videoUrl ?? "");
 
   function saveNote() {
     if (noteDraft !== (technique.notes ?? "")) {
       onUpdate(technique.id, { notes: noteDraft });
+    }
+  }
+
+  function saveVideo() {
+    if (videoDraft !== (technique.videoUrl ?? "")) {
+      onUpdate(technique.id, { videoUrl: videoDraft.trim() });
     }
   }
 
@@ -174,7 +181,10 @@ function TechniqueRow({
           className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[technique.status]}`}
         />
         <div className="flex-1 min-w-0">
-          <div className="text-sm truncate">{technique.name}</div>
+          <div className="text-sm truncate">
+            {technique.name}
+            {technique.videoUrl && " 🎥"}
+          </div>
           <div className="text-xs text-muted truncate">
             {TECHNIQUE_CATEGORY_LABELS[technique.category]}
             {technique.notes && ` · ${technique.notes}`}
@@ -211,9 +221,29 @@ function TechniqueRow({
             onChange={(e) => setNoteDraft(e.target.value)}
             onBlur={saveNote}
             rows={2}
-            placeholder="Note perso : détail, repère vidéo, sensation…"
+            placeholder="Note perso : détail, repère, sensation…"
             className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
           />
+          <div className="flex items-center gap-2">
+            <input
+              type="url"
+              value={videoDraft}
+              onChange={(e) => setVideoDraft(e.target.value)}
+              onBlur={saveVideo}
+              placeholder="Lien vidéo (YouTube, Instagram…)"
+              className="flex-1 bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
+            />
+            {technique.videoUrl && (
+              <a
+                href={technique.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-xs text-accent-2 font-medium whitespace-nowrap"
+              >
+                ▶ Voir
+              </a>
+            )}
+          </div>
           {technique.custom && (
             <button
               onClick={() => onDelete(technique.id)}

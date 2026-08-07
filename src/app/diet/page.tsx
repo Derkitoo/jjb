@@ -8,6 +8,7 @@ import {
   RECIPE_CATEGORY_LABELS,
   RecipeCategory,
 } from "@/lib/types";
+import MacrosTab from "@/components/MacrosTab";
 
 const CATEGORY_OPTIONS = Object.entries(RECIPE_CATEGORY_LABELS) as [
   RecipeCategory,
@@ -15,6 +16,37 @@ const CATEGORY_OPTIONS = Object.entries(RECIPE_CATEGORY_LABELS) as [
 ][];
 
 export default function DietPage() {
+  const [tab, setTab] = useState<"recettes" | "macros">("recettes");
+  return (
+    <div className="space-y-6">
+      <SectionTitle
+        title="Diète"
+        subtitle="Recettes healthy et besoins caloriques"
+      />
+      <div className="flex gap-2 bg-surface-2 border border-border rounded-full p-1">
+        <button
+          onClick={() => setTab("recettes")}
+          className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors ${
+            tab === "recettes" ? "bg-accent-2 text-white" : "text-muted"
+          }`}
+        >
+          Recettes
+        </button>
+        <button
+          onClick={() => setTab("macros")}
+          className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors ${
+            tab === "macros" ? "bg-accent-2 text-white" : "text-muted"
+          }`}
+        >
+          Mes macros
+        </button>
+      </div>
+      {tab === "recettes" ? <RecipesTab /> : <MacrosTab />}
+    </div>
+  );
+}
+
+function RecipesTab() {
   const { ready, recipes, toggleFavorite, deleteRecipe, addRecipe } = useData();
   const [filter, setFilter] = useState<RecipeCategory | "all" | "favorites">(
     "all"
@@ -38,10 +70,9 @@ export default function DietPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-2">
-        <SectionTitle
-          title="Diète"
-          subtitle={`${recipes.length} recette${recipes.length > 1 ? "s" : ""} healthy`}
-        />
+        <p className="text-sm text-muted">
+          {recipes.length} recette{recipes.length > 1 ? "s" : ""} healthy
+        </p>
         <button
           onClick={() => setShowForm((v) => !v)}
           className="shrink-0 h-10 px-4 rounded-full bg-accent-2 text-white font-semibold text-sm"

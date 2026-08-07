@@ -9,10 +9,12 @@ import {
 import {
   AppData,
   Goals,
+  NutritionProfile,
   Recipe,
   Technique,
   TrainingSession,
   WeighIn,
+  WeightCut,
 } from "./types";
 import { SEED_RECIPES } from "./seed-recipes";
 import { SEED_TECHNIQUES } from "./seed-techniques";
@@ -24,6 +26,21 @@ const DEFAULT_GOALS: Goals = {
   targetWeightKg: null,
 };
 
+const DEFAULT_NUTRITION_PROFILE: NutritionProfile = {
+  heightCm: null,
+  age: null,
+  sex: null,
+  activityLevel: "modere",
+  goal: "maintien",
+};
+
+const DEFAULT_WEIGHT_CUT: WeightCut = {
+  competitionName: "",
+  competitionDate: null,
+  targetWeightKg: null,
+  notes: "",
+};
+
 function emptyData(): AppData {
   return {
     sessions: [],
@@ -31,6 +48,8 @@ function emptyData(): AppData {
     weighIns: [],
     techniques: SEED_TECHNIQUES,
     goals: DEFAULT_GOALS,
+    nutritionProfile: DEFAULT_NUTRITION_PROFILE,
+    weightCut: DEFAULT_WEIGHT_CUT,
   };
 }
 
@@ -48,12 +67,14 @@ function readFromStorage(): AppData {
           : SEED_RECIPES,
       weighIns: parsed.weighIns ?? [],
       // Rétrocompatible : les exports/sauvegardes créés avant l'ajout des
-      // techniques et objectifs n'ont pas ces champs.
+      // techniques, objectifs, macros et cut de poids n'ont pas ces champs.
       techniques:
         parsed.techniques && parsed.techniques.length > 0
           ? parsed.techniques
           : SEED_TECHNIQUES,
       goals: { ...DEFAULT_GOALS, ...parsed.goals },
+      nutritionProfile: { ...DEFAULT_NUTRITION_PROFILE, ...parsed.nutritionProfile },
+      weightCut: { ...DEFAULT_WEIGHT_CUT, ...parsed.weightCut },
     };
   } catch {
     return emptyData();
@@ -127,6 +148,8 @@ interface DataContextValue {
   weighIns: WeighIn[];
   techniques: Technique[];
   goals: Goals;
+  nutritionProfile: NutritionProfile;
+  weightCut: WeightCut;
   addSession: (s: Omit<TrainingSession, "id" | "createdAt">) => void;
   updateSession: (id: string, patch: Partial<TrainingSession>) => void;
   deleteSession: (id: string) => void;
@@ -140,6 +163,8 @@ interface DataContextValue {
   addTechnique: (t: Omit<Technique, "id">) => void;
   deleteTechnique: (id: string) => void;
   updateGoals: (patch: Partial<Goals>) => void;
+  updateNutritionProfile: (patch: Partial<NutritionProfile>) => void;
+  updateWeightCut: (patch: Partial<WeightCut>) => void;
   exportData: () => void;
   importData: (json: string) => { ok: boolean; error?: string };
   resetData: () => void;
@@ -236,6 +261,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     mutate((d) => ({ ...d, goals: { ...d.goals, ...patch } }));
   }, []);
 
+  const updateNutritionProfile = useCallback((patch: Partial<NutritionProfile>) => {
+    mutate((d) => ({
+      ...d,
+      nutritionProfile: { ...d.nutritionProfile, ...patch },
+    }));
+  }, []);
+
+  const updateWeightCut = useCallback((patch: Partial<WeightCut>) => {
+    mutate((d) => ({ ...d, weightCut: { ...d.weightCut, ...patch } }));
+  }, []);
+
   const exportData = useCallback(() => {
     const blob = new Blob([JSON.stringify(currentData, null, 2)], {
       type: "application/json",
@@ -269,6 +305,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             ? parsed.techniques
             : SEED_TECHNIQUES,
         goals: { ...DEFAULT_GOALS, ...parsed.goals },
+        nutritionProfile: {
+          ...DEFAULT_NUTRITION_PROFILE,
+          ...parsed.nutritionProfile,
+        },
+        weightCut: { ...DEFAULT_WEIGHT_CUT, ...parsed.weightCut },
       });
       return { ok: true };
     } catch {
@@ -287,6 +328,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     weighIns: data.weighIns,
     techniques: data.techniques,
     goals: data.goals,
+    nutritionProfile: data.nutritionProfile,
+    weightCut: data.weightCut,
     addSession,
     updateSession,
     deleteSession,
@@ -300,6 +343,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     addTechnique,
     deleteTechnique,
     updateGoals,
+    updateNutritionProfile,
+    updateWeightCut,
     exportData,
     importData,
     resetData,

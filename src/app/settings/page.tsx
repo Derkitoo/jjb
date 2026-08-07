@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useData } from "@/lib/data-context";
 import { Card, SectionTitle } from "@/components/Card";
 import { WeightChart } from "@/components/WeightChart";
+import { WeightCutCard } from "@/components/WeightCutCard";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -169,6 +170,11 @@ export default function SettingsPage() {
             </button>
           </form>
         </Card>
+      </div>
+
+      <div>
+        <h2 className="font-semibold mb-2">Cut de poids compétition</h2>
+        <WeightCutCard />
       </div>
 
       <div>
