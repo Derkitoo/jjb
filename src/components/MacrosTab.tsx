@@ -75,48 +75,6 @@ export default function MacrosTab() {
         avis nutritionnel personnalisé — vois avec un pro pour un suivi fin.
       </p>
 
-      {targets ? (
-        <Card className="space-y-3">
-          <div className="text-sm text-muted">
-            Basé sur {latestWeight} kg (dernière pesée)
-          </div>
-          <div className="grid grid-cols-4 gap-2 text-center">
-            <MacroChip label="kcal/j" value={targets.kcal} />
-            <MacroChip label="Prot (g)" value={targets.protein} />
-            <MacroChip label="Gluc (g)" value={targets.carbs} />
-            <MacroChip label="Lip (g)" value={targets.fat} />
-          </div>
-        </Card>
-      ) : !profileComplete ? (
-        <Card className="text-sm text-muted">
-          Renseigne ta taille, ton âge et ton sexe ci-dessous pour obtenir une
-          estimation.
-        </Card>
-      ) : (
-        <Card className="space-y-3">
-          <p className="text-sm text-muted">
-            Profil enregistré ✓ — il ne manque plus qu&apos;un poids actuel
-            pour calculer tes besoins :
-          </p>
-          <form onSubmit={handleQuickWeight} className="flex gap-2">
-            <input
-              type="number"
-              step={0.1}
-              value={quickWeight}
-              onChange={(e) => setQuickWeight(e.target.value)}
-              placeholder="Ton poids (kg)"
-              className="flex-1 bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
-            />
-            <button
-              type="submit"
-              className="shrink-0 h-10 px-4 rounded-full bg-accent-2 text-white font-semibold text-sm"
-            >
-              Ajouter
-            </button>
-          </form>
-        </Card>
-      )}
-
       <Card>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -193,6 +151,48 @@ export default function MacrosTab() {
           </button>
         </form>
       </Card>
+
+      {targets ? (
+        <Card className="space-y-3">
+          <div className="text-sm font-semibold">
+            Tes besoins estimés · basé sur {latestWeight} kg (dernière pesée)
+          </div>
+          <div className="grid grid-cols-4 gap-2 text-center">
+            <MacroChip label="kcal/j" value={targets.kcal} />
+            <MacroChip label="Prot (g)" value={targets.protein} />
+            <MacroChip label="Gluc (g)" value={targets.carbs} />
+            <MacroChip label="Lip (g)" value={targets.fat} />
+          </div>
+        </Card>
+      ) : !profileComplete ? (
+        <Card className="text-sm text-muted">
+          Renseigne ta taille, ton âge et ton sexe ci-dessus pour obtenir une
+          estimation.
+        </Card>
+      ) : (
+        <Card className="space-y-3">
+          <p className="text-sm text-muted">
+            Profil enregistré ✓ — il ne manque plus qu&apos;un poids actuel
+            pour calculer tes besoins :
+          </p>
+          <form onSubmit={handleQuickWeight} className="flex gap-2">
+            <input
+              type="number"
+              step={0.1}
+              value={quickWeight}
+              onChange={(e) => setQuickWeight(e.target.value)}
+              placeholder="Ton poids (kg)"
+              className="flex-1 bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
+            />
+            <button
+              type="submit"
+              className="shrink-0 h-10 px-4 rounded-full bg-accent-2 text-white font-semibold text-sm"
+            >
+              Ajouter
+            </button>
+          </form>
+        </Card>
+      )}
     </div>
   );
 }
