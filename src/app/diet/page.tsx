@@ -89,26 +89,21 @@ function RecipesTab() {
         className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
       />
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-        <FilterChip
-          label="Toutes"
-          active={filter === "all"}
-          onClick={() => setFilter("all")}
-        />
-        <FilterChip
-          label="⭐ Favoris"
-          active={filter === "favorites"}
-          onClick={() => setFilter("favorites")}
-        />
+      <select
+        value={filter}
+        onChange={(e) =>
+          setFilter(e.target.value as RecipeCategory | "all" | "favorites")
+        }
+        className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
+      >
+        <option value="all">Toutes les recettes</option>
+        <option value="favorites">⭐ Favoris</option>
         {CATEGORY_OPTIONS.map(([value, label]) => (
-          <FilterChip
-            key={value}
-            label={label}
-            active={filter === value}
-            onClick={() => setFilter(value)}
-          />
+          <option key={value} value={value}>
+            {label}
+          </option>
         ))}
-      </div>
+      </select>
 
       {showForm && (
         <RecipeForm
@@ -133,29 +128,6 @@ function RecipesTab() {
         ))}
       </div>
     </div>
-  );
-}
-
-function FilterChip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
-        active
-          ? "bg-accent-2 border-accent-2 text-white"
-          : "bg-surface-2 border-border text-muted"
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 
