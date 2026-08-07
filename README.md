@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BJJ Coach 🥋
 
-## Getting Started
+Application perso pour rester actif en jiu-jitsu brésilien : suivi des séances,
+chrono d'entraînement (rounds + chrono libre) et coin diète avec recettes healthy.
 
-First, run the development server:
+## Démarrer en local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Puis ouvre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Fonctionnalités
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Séances** : log de tes entraînements (type, durée, intensité, techniques, notes),
+  streak hebdomadaire et stats rapides.
+- **Chrono** : minuteur de rounds configurable (nombre de rounds, durée, repos,
+  préparation) avec bips sonores, + un chrono libre. Les deux peuvent être
+  enregistrés directement comme séance.
+- **Diète** : bibliothèque de recettes healthy orientées pratiquant de combat
+  (macros, ingrédients, étapes), favoris, recherche, et ajout de tes propres
+  recettes.
+- **Réglages** : suivi de poids, export/import JSON de toutes tes données
+  (tout est stocké en local dans le navigateur, rien n'est envoyé sur un serveur).
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 (App Router) + TypeScript + Tailwind CSS v4. Aucune base de données :
+les données vivent dans le `localStorage` du navigateur, avec export/import JSON
+pour les sauvegarder ou changer d'appareil.
