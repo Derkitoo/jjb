@@ -9,7 +9,6 @@ import {
 import {
   AppData,
   Goals,
-  MasteryStatus,
   Recipe,
   Technique,
   TrainingSession,
@@ -137,7 +136,7 @@ interface DataContextValue {
   toggleFavorite: (id: string) => void;
   addWeighIn: (w: Omit<WeighIn, "id">) => void;
   deleteWeighIn: (id: string) => void;
-  setTechniqueStatus: (id: string, status: MasteryStatus) => void;
+  updateTechnique: (id: string, patch: Partial<Technique>) => void;
   addTechnique: (t: Omit<Technique, "id">) => void;
   deleteTechnique: (id: string) => void;
   updateGoals: (patch: Partial<Goals>) => void;
@@ -210,11 +209,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     mutate((d) => ({ ...d, weighIns: d.weighIns.filter((w) => w.id !== id) }));
   }, []);
 
-  const setTechniqueStatus = useCallback((id: string, status: MasteryStatus) => {
+  const updateTechnique = useCallback((id: string, patch: Partial<Technique>) => {
     mutate((d) => ({
       ...d,
       techniques: d.techniques.map((t) =>
-        t.id === id ? { ...t, status } : t
+        t.id === id ? { ...t, ...patch } : t
       ),
     }));
   }, []);
@@ -297,7 +296,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     toggleFavorite,
     addWeighIn,
     deleteWeighIn,
-    setTechniqueStatus,
+    updateTechnique,
     addTechnique,
     deleteTechnique,
     updateGoals,

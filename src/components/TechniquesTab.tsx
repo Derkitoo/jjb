@@ -16,13 +16,19 @@ import {
 
 const STATUS_ORDER: MasteryStatus[] = ["a_decouvrir", "en_cours", "maitrisee"];
 
+const STATUS_DOT: Record<MasteryStatus, string> = {
+  a_decouvrir: "bg-transparent border border-muted",
+  en_cours: "bg-amber-600 border border-amber-600",
+  maitrisee: "bg-accent-2 border border-accent-2",
+};
+
 const CATEGORY_OPTIONS = Object.entries(TECHNIQUE_CATEGORY_LABELS) as [
   TechniqueCategory,
   string
 ][];
 
 export default function TechniquesTab() {
-  const { techniques, setTechniqueStatus, addTechnique, deleteTechnique } =
+  const { techniques, updateTechnique, addTechnique, deleteTechnique } =
     useData();
   const [beltFilter, setBeltFilter] = useState<Belt | "all">("all");
   const [showForm, setShowForm] = useState(false);
@@ -30,35 +36,32 @@ export default function TechniquesTab() {
   const belts = beltFilter === "all" ? BELT_ORDER : [beltFilter];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-muted flex-1">
-          Coche ta progression technique, ceinture par ceinture. Checklist
-          personnelle — pas un référentiel officiel de passage de grade.
+        <p className="text-xs text-muted flex-1">
+          Checklist personnelle — pas un référentiel officiel de passage de
+          grade.
         </p>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="shrink-0 h-10 px-4 rounded-full bg-surface-2 border border-border font-semibold text-sm"
+          className="shrink-0 h-9 px-3 rounded-full bg-surface-2 border border-border font-semibold text-xs"
         >
           {showForm ? "Fermer" : "+ Technique"}
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-        <FilterChip
-          label="Toutes"
-          active={beltFilter === "all"}
-          onClick={() => setBeltFilter("all")}
-        />
+      <select
+        value={beltFilter}
+        onChange={(e) => setBeltFilter(e.target.value as Belt | "all")}
+        className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
+      >
+        <option value="all">Toutes les ceintures</option>
         {BELT_ORDER.map((belt) => (
-          <FilterChip
-            key={belt}
-            label={BELT_LABELS[belt]}
-            active={beltFilter === belt}
-            onClick={() => setBeltFilter(belt)}
-          />
+          <option key={belt} value={belt}>
+            {BELT_LABELS[belt]}
+          </option>
         ))}
-      </div>
+      </select>
 
       {showForm && (
         <AddTechniqueForm
@@ -69,13 +72,14 @@ export default function TechniquesTab() {
         />
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-3">
         {belts.map((belt) => (
           <BeltGroup
             key={belt}
             belt={belt}
             techniques={techniques.filter((t) => t.belt === belt)}
-            onStatusChange={setTechniqueStatus}
+            defaultOpen={beltFilter !== "all"}
+            onUpdate={updateTechnique}
             onDelete={deleteTechnique}
           />
         ))}
@@ -87,14 +91,17 @@ export default function TechniquesTab() {
 function BeltGroup({
   belt,
   techniques,
-  onStatusChange,
+  defaultOpen,
+  onUpdate,
   onDelete,
 }: {
   belt: Belt;
   techniques: Technique[];
-  onStatusChange: (id: string, status: MasteryStatus) => void;
+  defaultOpen: boolean;
+  onUpdate: (id: string, patch: Partial<Technique>) => void;
   onDelete: (id: string) => void;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   const mastered = techniques.filter((t) => t.status === "maitrisee").length;
   const total = techniques.length;
   const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
@@ -102,104 +109,122 @@ function BeltGroup({
   if (total === 0) return null;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="font-semibold">{BELT_LABELS[belt]}</h2>
-        <span className="text-xs text-muted">
-          {mastered}/{total} maîtrisées
-        </span>
-      </div>
-      <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden mb-3">
-        <div
-          className="h-full bg-accent-2 transition-[width]"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <div className="space-y-2">
-        {techniques.map((t) => (
-          <TechniqueRow
-            key={t.id}
-            technique={t}
-            onStatusChange={onStatusChange}
-            onDelete={onDelete}
-          />
-        ))}
-      </div>
-    </div>
+    <Card className="p-0 overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-sm">{BELT_LABELS[belt]}</span>
+            <span className="text-xs text-muted shrink-0 ml-2">
+              {mastered}/{total}
+            </span>
+          </div>
+          <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden mt-1.5">
+            <div
+              className="h-full bg-accent-2 transition-[width]"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+        <span className="text-muted text-xs shrink-0">{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div className="border-t border-border divide-y divide-border">
+          {techniques.map((t) => (
+            <TechniqueRow
+              key={t.id}
+              technique={t}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }
 
 function TechniqueRow({
   technique,
-  onStatusChange,
+  onUpdate,
   onDelete,
 }: {
   technique: Technique;
-  onStatusChange: (id: string, status: MasteryStatus) => void;
+  onUpdate: (id: string, patch: Partial<Technique>) => void;
   onDelete: (id: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState(technique.notes ?? "");
+
+  function saveNote() {
+    if (noteDraft !== (technique.notes ?? "")) {
+      onUpdate(technique.id, { notes: noteDraft });
+    }
+  }
+
   return (
-    <Card className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <div className="font-medium text-sm">{technique.name}</div>
-          <div className="text-xs text-muted">
+    <div className="px-4 py-2.5">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-3 text-left"
+      >
+        <span
+          className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[technique.status]}`}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm truncate">{technique.name}</div>
+          <div className="text-xs text-muted truncate">
             {TECHNIQUE_CATEGORY_LABELS[technique.category]}
-            {technique.custom && " · perso"}
+            {technique.notes && ` · ${technique.notes}`}
           </div>
         </div>
-        {technique.custom && (
-          <button
-            onClick={() => onDelete(technique.id)}
-            className="text-xs text-accent shrink-0"
-          >
-            Suppr.
-          </button>
-        )}
-      </div>
-      <div className="flex gap-1.5">
-        {STATUS_ORDER.map((status) => (
-          <button
-            key={status}
-            onClick={() => onStatusChange(technique.id, status)}
-            className={`flex-1 h-8 rounded-lg text-xs font-medium border transition-colors ${
-              technique.status === status
-                ? status === "maitrisee"
-                  ? "bg-accent-2 border-accent-2 text-white"
-                  : status === "en_cours"
-                  ? "bg-amber-600 border-amber-600 text-white"
-                  : "bg-surface-2 border-border text-foreground"
-                : "bg-transparent border-border text-muted"
-            }`}
-          >
-            {MASTERY_LABELS[status]}
-          </button>
-        ))}
-      </div>
-    </Card>
-  );
-}
+        <span className="text-xs text-muted shrink-0">
+          {MASTERY_LABELS[technique.status]}
+        </span>
+      </button>
 
-function FilterChip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-colors ${
-        active
-          ? "bg-accent-2 border-accent-2 text-white"
-          : "bg-surface-2 border-border text-muted"
-      }`}
-    >
-      {label}
-    </button>
+      {open && (
+        <div className="mt-3 pl-[1.375rem] space-y-3">
+          <div className="flex gap-1.5">
+            {STATUS_ORDER.map((status) => (
+              <button
+                key={status}
+                onClick={() => onUpdate(technique.id, { status })}
+                className={`flex-1 h-8 rounded-lg text-xs font-medium border transition-colors ${
+                  technique.status === status
+                    ? status === "maitrisee"
+                      ? "bg-accent-2 border-accent-2 text-white"
+                      : status === "en_cours"
+                      ? "bg-amber-600 border-amber-600 text-white"
+                      : "bg-surface-2 border-border text-foreground"
+                    : "bg-transparent border-border text-muted"
+                }`}
+              >
+                {MASTERY_LABELS[status]}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={noteDraft}
+            onChange={(e) => setNoteDraft(e.target.value)}
+            onBlur={saveNote}
+            rows={2}
+            placeholder="Note perso : détail, repère vidéo, sensation…"
+            className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
+          />
+          {technique.custom && (
+            <button
+              onClick={() => onDelete(technique.id)}
+              className="text-xs text-accent font-medium"
+            >
+              Supprimer cette technique
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
