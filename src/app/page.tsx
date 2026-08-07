@@ -20,7 +20,7 @@ function pickSuggestion(recipes: Recipe[], sessionsCount: number): Recipe | null
 }
 
 export default function DashboardPage() {
-  const { ready, sessions, recipes } = useData();
+  const { ready, sessions, recipes, weighIns, goals } = useData();
 
   if (!ready) {
     return <p className="text-muted text-sm">Chargement…</p>;
@@ -31,6 +31,9 @@ export default function DashboardPage() {
   const weekMinutes = totalMinutesThisWeek(sessions);
   const recent = sessions.slice(0, 5);
   const suggestion = pickSuggestion(recipes, sessions.length);
+  const latestWeight = weighIns[0];
+  const hasGoals =
+    goals.weeklySessionsTarget != null || goals.targetWeightKg != null;
 
   return (
     <div className="space-y-6">
@@ -66,6 +69,45 @@ export default function DashboardPage() {
           </span>
         </div>
       </Card>
+
+      {hasGoals && (
+        <Card className="space-y-3">
+          <h2 className="font-semibold text-sm">Objectifs</h2>
+          {goals.weeklySessionsTarget != null && (
+            <div>
+              <div className="flex items-center justify-between text-sm mb-1">
+                <span className="text-muted">Séances cette semaine</span>
+                <span className="font-medium">
+                  {weekSessions.length}/{goals.weeklySessionsTarget}
+                </span>
+              </div>
+              <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-accent transition-[width]"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      (weekSessions.length / goals.weeklySessionsTarget) * 100
+                    )}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+          {goals.targetWeightKg != null && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted">Poids cible</span>
+              <span className="font-medium">
+                {latestWeight
+                  ? `${latestWeight.weightKg} kg → ${goals.targetWeightKg} kg (${
+                      latestWeight.weightKg - goals.targetWeightKg > 0 ? "−" : "+"
+                    }${Math.abs(latestWeight.weightKg - goals.targetWeightKg).toFixed(1)} kg)`
+                  : `Objectif ${goals.targetWeightKg} kg — ajoute une pesée`}
+              </span>
+            </div>
+          )}
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Link

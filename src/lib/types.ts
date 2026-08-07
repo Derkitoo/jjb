@@ -64,8 +64,68 @@ export interface WeighIn {
   weightKg: number;
 }
 
+export type Belt = "blanche" | "bleue" | "violette" | "marron" | "noire";
+
+export const BELT_LABELS: Record<Belt, string> = {
+  blanche: "Ceinture blanche",
+  bleue: "Ceinture bleue",
+  violette: "Ceinture violette",
+  marron: "Ceinture marron",
+  noire: "Ceinture noire",
+};
+
+export const BELT_ORDER: Belt[] = [
+  "blanche",
+  "bleue",
+  "violette",
+  "marron",
+  "noire",
+];
+
+export type TechniqueCategory =
+  | "garde"
+  | "passage"
+  | "soumission"
+  | "projection"
+  | "echappement"
+  | "controle";
+
+export const TECHNIQUE_CATEGORY_LABELS: Record<TechniqueCategory, string> = {
+  garde: "Garde",
+  passage: "Passage de garde",
+  soumission: "Soumission",
+  projection: "Projection",
+  echappement: "Échappement",
+  controle: "Contrôle / Transition",
+};
+
+export type MasteryStatus = "a_decouvrir" | "en_cours" | "maitrisee";
+
+export const MASTERY_LABELS: Record<MasteryStatus, string> = {
+  a_decouvrir: "À découvrir",
+  en_cours: "En cours",
+  maitrisee: "Maîtrisée",
+};
+
+export interface Technique {
+  id: string;
+  name: string;
+  belt: Belt;
+  category: TechniqueCategory;
+  status: MasteryStatus;
+  notes?: string;
+  custom?: boolean;
+}
+
+export interface Goals {
+  weeklySessionsTarget: number | null;
+  targetWeightKg: number | null;
+}
+
 export interface AppData {
   sessions: TrainingSession[];
   recipes: Recipe[];
   weighIns: WeighIn[];
+  techniques: Technique[];
+  goals: Goals;
 }

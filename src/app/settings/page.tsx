@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useData } from "@/lib/data-context";
 import { Card, SectionTitle } from "@/components/Card";
+import { WeightChart } from "@/components/WeightChart";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -14,6 +15,8 @@ export default function SettingsPage() {
     weighIns,
     addWeighIn,
     deleteWeighIn,
+    goals,
+    updateGoals,
     exportData,
     importData,
     resetData,
@@ -23,8 +26,25 @@ export default function SettingsPage() {
   const [weightDate, setWeightDate] = useState(todayISO());
   const [weightKg, setWeightKg] = useState(80);
   const [confirmingReset, setConfirmingReset] = useState(false);
+  const [weeklyTarget, setWeeklyTarget] = useState(
+    goals.weeklySessionsTarget != null ? String(goals.weeklySessionsTarget) : ""
+  );
+  const [targetWeight, setTargetWeight] = useState(
+    goals.targetWeightKg != null ? String(goals.targetWeightKg) : ""
+  );
+  const [goalsSaved, setGoalsSaved] = useState(false);
 
   if (!ready) return <p className="text-muted text-sm">Chargement…</p>;
+
+  function handleSaveGoals(e: React.FormEvent) {
+    e.preventDefault();
+    updateGoals({
+      weeklySessionsTarget: weeklyTarget.trim() ? Number(weeklyTarget) : null,
+      targetWeightKg: targetWeight.trim() ? Number(targetWeight) : null,
+    });
+    setGoalsSaved(true);
+    setTimeout(() => setGoalsSaved(false), 2000);
+  }
 
   function handleImportClick() {
     fileInputRef.current?.click();
@@ -59,6 +79,7 @@ export default function SettingsPage() {
       <div>
         <h2 className="font-semibold mb-2">Suivi du poids</h2>
         <Card className="space-y-3">
+          <WeightChart data={weighIns} targetWeightKg={goals.targetWeightKg} />
           <form onSubmit={handleAddWeighIn} className="flex items-end gap-2">
             <label className="text-sm flex-1">
               <span className="block text-muted mb-1">Date</span>
@@ -108,6 +129,45 @@ export default function SettingsPage() {
               ))}
             </div>
           )}
+        </Card>
+      </div>
+
+      <div>
+        <h2 className="font-semibold mb-2">Objectifs</h2>
+        <Card>
+          <form onSubmit={handleSaveGoals} className="space-y-3">
+            <label className="text-sm block">
+              <span className="block text-muted mb-1">
+                Séances par semaine visées
+              </span>
+              <input
+                type="number"
+                min={0}
+                max={14}
+                value={weeklyTarget}
+                onChange={(e) => setWeeklyTarget(e.target.value)}
+                placeholder="Ex : 3"
+                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2"
+              />
+            </label>
+            <label className="text-sm block">
+              <span className="block text-muted mb-1">Poids cible (kg)</span>
+              <input
+                type="number"
+                step={0.1}
+                value={targetWeight}
+                onChange={(e) => setTargetWeight(e.target.value)}
+                placeholder="Ex : 78"
+                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2"
+              />
+            </label>
+            <button
+              type="submit"
+              className="w-full h-11 rounded-full bg-surface-2 border border-border font-semibold"
+            >
+              {goalsSaved ? "Objectifs enregistrés ✓" : "Enregistrer les objectifs"}
+            </button>
+          </form>
         </Card>
       </div>
 

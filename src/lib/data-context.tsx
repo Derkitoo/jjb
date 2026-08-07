@@ -6,16 +6,32 @@ import {
   useContext,
   useSyncExternalStore,
 } from "react";
-import { AppData, Recipe, TrainingSession, WeighIn } from "./types";
+import {
+  AppData,
+  Goals,
+  MasteryStatus,
+  Recipe,
+  Technique,
+  TrainingSession,
+  WeighIn,
+} from "./types";
 import { SEED_RECIPES } from "./seed-recipes";
+import { SEED_TECHNIQUES } from "./seed-techniques";
 
 const STORAGE_KEY = "bjj-tracker:data:v1";
+
+const DEFAULT_GOALS: Goals = {
+  weeklySessionsTarget: null,
+  targetWeightKg: null,
+};
 
 function emptyData(): AppData {
   return {
     sessions: [],
     recipes: SEED_RECIPES,
     weighIns: [],
+    techniques: SEED_TECHNIQUES,
+    goals: DEFAULT_GOALS,
   };
 }
 
@@ -32,6 +48,13 @@ function readFromStorage(): AppData {
           ? parsed.recipes
           : SEED_RECIPES,
       weighIns: parsed.weighIns ?? [],
+      // Rétrocompatible : les exports/sauvegardes créés avant l'ajout des
+      // techniques et objectifs n'ont pas ces champs.
+      techniques:
+        parsed.techniques && parsed.techniques.length > 0
+          ? parsed.techniques
+          : SEED_TECHNIQUES,
+      goals: { ...DEFAULT_GOALS, ...parsed.goals },
     };
   } catch {
     return emptyData();
@@ -103,6 +126,8 @@ interface DataContextValue {
   sessions: TrainingSession[];
   recipes: Recipe[];
   weighIns: WeighIn[];
+  techniques: Technique[];
+  goals: Goals;
   addSession: (s: Omit<TrainingSession, "id" | "createdAt">) => void;
   updateSession: (id: string, patch: Partial<TrainingSession>) => void;
   deleteSession: (id: string) => void;
@@ -112,6 +137,10 @@ interface DataContextValue {
   toggleFavorite: (id: string) => void;
   addWeighIn: (w: Omit<WeighIn, "id">) => void;
   deleteWeighIn: (id: string) => void;
+  setTechniqueStatus: (id: string, status: MasteryStatus) => void;
+  addTechnique: (t: Omit<Technique, "id">) => void;
+  deleteTechnique: (id: string) => void;
+  updateGoals: (patch: Partial<Goals>) => void;
   exportData: () => void;
   importData: (json: string) => { ok: boolean; error?: string };
   resetData: () => void;
@@ -181,6 +210,33 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     mutate((d) => ({ ...d, weighIns: d.weighIns.filter((w) => w.id !== id) }));
   }, []);
 
+  const setTechniqueStatus = useCallback((id: string, status: MasteryStatus) => {
+    mutate((d) => ({
+      ...d,
+      techniques: d.techniques.map((t) =>
+        t.id === id ? { ...t, status } : t
+      ),
+    }));
+  }, []);
+
+  const addTechnique = useCallback((t: Omit<Technique, "id">) => {
+    mutate((d) => ({
+      ...d,
+      techniques: [...d.techniques, { ...t, id: uid() }],
+    }));
+  }, []);
+
+  const deleteTechnique = useCallback((id: string) => {
+    mutate((d) => ({
+      ...d,
+      techniques: d.techniques.filter((t) => t.id !== id),
+    }));
+  }, []);
+
+  const updateGoals = useCallback((patch: Partial<Goals>) => {
+    mutate((d) => ({ ...d, goals: { ...d.goals, ...patch } }));
+  }, []);
+
   const exportData = useCallback(() => {
     const blob = new Blob([JSON.stringify(currentData, null, 2)], {
       type: "application/json",
@@ -209,6 +265,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             ? parsed.recipes
             : SEED_RECIPES,
         weighIns: Array.isArray(parsed.weighIns) ? parsed.weighIns : [],
+        techniques:
+          Array.isArray(parsed.techniques) && parsed.techniques.length > 0
+            ? parsed.techniques
+            : SEED_TECHNIQUES,
+        goals: { ...DEFAULT_GOALS, ...parsed.goals },
       });
       return { ok: true };
     } catch {
@@ -225,6 +286,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     sessions: data.sessions,
     recipes: data.recipes,
     weighIns: data.weighIns,
+    techniques: data.techniques,
+    goals: data.goals,
     addSession,
     updateSession,
     deleteSession,
@@ -234,6 +297,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     toggleFavorite,
     addWeighIn,
     deleteWeighIn,
+    setTechniqueStatus,
+    addTechnique,
+    deleteTechnique,
+    updateGoals,
     exportData,
     importData,
     resetData,

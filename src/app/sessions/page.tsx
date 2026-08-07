@@ -9,6 +9,7 @@ import {
   TrainingSession,
 } from "@/lib/types";
 import { averageIntensity, currentWeekStreak } from "@/lib/stats";
+import TechniquesTab from "@/components/TechniquesTab";
 
 const TYPE_OPTIONS = Object.entries(SESSION_TYPE_LABELS) as [SessionType, string][];
 
@@ -17,6 +18,37 @@ function todayISO() {
 }
 
 export default function SessionsPage() {
+  const [tab, setTab] = useState<"historique" | "techniques">("historique");
+  return (
+    <div className="space-y-6">
+      <SectionTitle
+        title="Séances"
+        subtitle="Ton historique d'entraînement et ta progression technique"
+      />
+      <div className="flex gap-2 bg-surface-2 border border-border rounded-full p-1">
+        <button
+          onClick={() => setTab("historique")}
+          className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors ${
+            tab === "historique" ? "bg-accent text-white" : "text-muted"
+          }`}
+        >
+          Historique
+        </button>
+        <button
+          onClick={() => setTab("techniques")}
+          className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors ${
+            tab === "techniques" ? "bg-accent text-white" : "text-muted"
+          }`}
+        >
+          Techniques
+        </button>
+      </div>
+      {tab === "historique" ? <HistoryTab /> : <TechniquesTab />}
+    </div>
+  );
+}
+
+function HistoryTab() {
   const { ready, sessions, addSession, deleteSession } = useData();
   const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState(todayISO());
@@ -47,12 +79,11 @@ export default function SessionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <SectionTitle
-          title="Séances"
-          subtitle={`${sessions.length} séance${sessions.length > 1 ? "s" : ""} · intensité moy. ${averageIntensity(
-            sessions
-          ).toFixed(1)}/5 · ${currentWeekStreak(sessions)} sem. d'affilée`}
-        />
+        <p className="text-sm text-muted">
+          {sessions.length} séance{sessions.length > 1 ? "s" : ""} · intensité
+          moy. {averageIntensity(sessions).toFixed(1)}/5 ·{" "}
+          {currentWeekStreak(sessions)} sem. d&apos;affilée
+        </p>
         <button
           onClick={() => setShowForm((v) => !v)}
           className="shrink-0 h-10 px-4 rounded-full bg-accent text-white font-semibold text-sm"
