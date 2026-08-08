@@ -9,6 +9,8 @@ import { WeightCutCard } from "@/components/WeightCutCard";
 import { MatchLogCard } from "@/components/MatchLogCard";
 import { AccessCard } from "@/components/AccessCard";
 
+import { DataSyncModal } from "@/components/DataSyncModal";
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -28,6 +30,7 @@ export default function SettingsPage() {
   const { isAdmin } = useAdmin();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [showSyncModal, setShowSyncModal] = useState(false);
   const [weightDate, setWeightDate] = useState(todayISO());
   const [weightKg, setWeightKg] = useState(80);
   const [confirmingReset, setConfirmingReset] = useState(false);
@@ -193,26 +196,38 @@ export default function SettingsPage() {
         <AccessCard />
       </div>
 
+      {showSyncModal && (
+        <DataSyncModal onClose={() => setShowSyncModal(false)} />
+      )}
+
       <div>
-        <h2 className="font-semibold mb-2">Sauvegarde des données</h2>
+        <h2 className="font-semibold mb-2">Sauvegarde & Transfert de données</h2>
         <Card className="space-y-3">
           <p className="text-sm text-muted">
             Tes séances, recettes et suivi de poids sont stockés uniquement
-            dans ce navigateur. Exporte régulièrement un fichier JSON pour ne
-            rien perdre ou pour transférer tes données sur un autre appareil.
+            dans ce navigateur. Transfère tes données vers ton téléphone ou un autre appareil en 1 seconde.
           </p>
-          <div className="flex gap-2">
+
+          <button
+            type="button"
+            onClick={() => setShowSyncModal(true)}
+            className="w-full py-3 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md transition-all hover:bg-accent/90 active:scale-95 flex items-center justify-center gap-2"
+          >
+            <span>📱 Synchroniser Mobile ↔ PC (QR / Clé rapide)</span>
+          </button>
+
+          <div className="flex gap-2 pt-1">
             <button
               onClick={exportData}
-              className="flex-1 h-11 rounded-full bg-accent text-white font-semibold text-sm"
+              className="flex-1 h-10 rounded-full bg-surface-2 border border-border font-semibold text-xs"
             >
-              Exporter (JSON)
+              Exporter JSON
             </button>
             <button
               onClick={handleImportClick}
-              className="flex-1 h-11 rounded-full bg-surface-2 border border-border font-semibold text-sm"
+              className="flex-1 h-10 rounded-full bg-surface-2 border border-border font-semibold text-xs"
             >
-              Importer
+              Importer JSON
             </button>
             <input
               ref={fileInputRef}
