@@ -87,47 +87,34 @@ export function playDbzTeleport() {
   playAudioFile("dbz-teleport.mp3");
 }
 
-export function speak(text: string, pitch = 1.0, rate = 1.05) {
-  if (!isSpeechSupported()) return;
-  try {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "fr-FR";
-    utterance.rate = rate;
-    utterance.pitch = pitch;
-    window.speechSynthesis.speak(utterance);
-  } catch {}
-}
-
-export function speakDbzRoundStart(roundNum: number) {
+export function speakRoundStart(roundNum: number) {
   playAudioFile("dbz-round-start.mp3");
 }
 
-export function speakDbzLastMinute() {
+export function speakLastMinute() {
   playAudioFile("dbz-last-minute.mp3");
 }
 
-export function speakDbzRest() {
+export function speakRest() {
   playAudioFile("dbz-rest.mp3");
 }
 
-export function speakDbzFinish() {
+export function speakFinish() {
   playAudioFile("dbz-finish.mp3");
 }
 
-// Classic voices
-export function speakRoundStart(roundNum: number) {
-  speak(`Round ${roundNum}. Bagarre !`);
+export function speakDbzRoundStart(roundNum: number) {
+  speakRoundStart(roundNum);
 }
 
-export function speakRest() {
-  speak("Repos. Respirez.");
+export function speakDbzLastMinute() {
+  speakLastMinute();
 }
 
-export function speakLastMinute() {
-  speak("Dernière minute ! Accélérez !");
+export function speakDbzRest() {
+  speakRest();
 }
 
-export function speakFinish() {
-  speak("Terminé ! Beau travail, champion !");
+export function speakDbzFinish() {
+  speakFinish();
 }

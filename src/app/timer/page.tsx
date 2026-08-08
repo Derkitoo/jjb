@@ -6,15 +6,7 @@ import { useTimer } from "@/lib/timer-context";
 import { Card, SectionTitle } from "@/components/Card";
 import { RadialProgressRing } from "@/components/RadialProgressRing";
 
-import {
-  speakDbzRoundStart,
-  speakDbzLastMinute,
-  speakDbzRest,
-  speakDbzFinish,
-  preloadAndUnlockAudio,
-  playDbzScouter,
-  playDbzTeleport,
-} from "@/lib/speech";
+import { preloadAndUnlockAudio } from "@/lib/speech";
 
 function formatTime(ms: number) {
   const totalSec = Math.max(0, Math.ceil(ms / 1000));
@@ -123,53 +115,6 @@ function RoundTimer() {
 
   return (
     <div className="space-y-6">
-      {/* DBZ Audio Test Card */}
-      <Card className="space-y-3 bg-gradient-to-r from-amber-500/10 via-surface-2 to-surface border border-amber-500/30">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-            <span>🐉 Vrais Fichiers MP3 DBZ Anime</span>
-          </h3>
-          <span className="text-[10px] text-muted bg-surface px-2 py-0.5 rounded-full border border-border">Official MP3</span>
-        </div>
-
-        <p className="text-xs text-muted">
-          Clique pour écouter les vrais extraits audio officiels téléchargeables tirés de l&apos;anime DBZ :
-        </p>
-
-        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 text-xs">
-          <button
-            onClick={() => speakDbzRoundStart(1)}
-            className="p-3 rounded-xl bg-surface-2 hover:bg-surface border border-amber-500/40 text-amber-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
-          >
-            <span>💥 Kaio-Ken x4 (2:43-2:53)</span>
-            <span className="text-[10px] text-muted font-normal">Début de round</span>
-          </button>
-
-          <button
-            onClick={() => speakDbzLastMinute()}
-            className="p-3 rounded-xl bg-surface-2 hover:bg-surface border border-rose-500/40 text-rose-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1 ring-1 ring-rose-500/40"
-          >
-            <span>⚡ Kamehameha (1:45-1:55)</span>
-            <span className="text-[10px] text-rose-400 font-bold">Dernière minute (60s)</span>
-          </button>
-
-          <button
-            onClick={() => speakDbzRest()}
-            className="p-3 rounded-xl bg-surface-2 hover:bg-surface border border-emerald-500/40 text-emerald-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
-          >
-            <span>🫘 Récupération (0:23-0:28)</span>
-            <span className="text-[10px] text-muted font-normal">Temps de repos</span>
-          </button>
-
-          <button
-            onClick={() => speakDbzFinish()}
-            className="p-3 rounded-xl bg-surface-2 hover:bg-surface border border-purple-500/40 text-purple-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
-          >
-            <span>👑 Guerrier Élite (0:37-0:43)</span>
-            <span className="text-[10px] text-muted font-normal">Fin de séance</span>
-          </button>
-        </div>
-      </Card>
 
       {phase === "idle" && (
         <div className="space-y-4">
