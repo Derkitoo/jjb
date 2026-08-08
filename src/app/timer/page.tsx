@@ -11,6 +11,7 @@ import {
   speakDbzLastMinute,
   speakDbzRest,
   speakDbzFinish,
+  preloadAndUnlockAudio,
   playDbzScouter,
   playDbzTeleport,
 } from "@/lib/speech";
@@ -79,6 +80,7 @@ function RoundTimer() {
 
   function handleStart() {
     setSaved(false);
+    preloadAndUnlockAudio();
     startRoundTimer();
   }
 
