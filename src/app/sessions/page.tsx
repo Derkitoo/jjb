@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useData } from "@/lib/data-context";
 import { useAdmin } from "@/lib/admin-context";
 import { Card, SectionTitle } from "@/components/Card";
@@ -22,9 +23,29 @@ export default function SessionsPage() {
   return (
     <div className="space-y-6">
       <SectionTitle
-        title="Journal de Séances 🥋"
-        subtitle="Historique de tes entraînements, durée, intensité et résultats de sparring"
+        title="Hub d'Entraînement 🥋"
+        subtitle="Historique de tes séances JJB, prépa physique et gameplan tactique"
       />
+
+      {/* Sub-navigation Tabs */}
+      <div className="flex gap-2 bg-surface-2 border border-border rounded-full p-1 text-xs">
+        <span className="flex-1 h-9 rounded-full bg-accent text-white font-bold flex items-center justify-center shadow-md">
+          🥋 Séances JJB
+        </span>
+        <Link
+          href="/workout"
+          className="flex-1 h-9 rounded-full text-muted hover:text-foreground font-semibold flex items-center justify-center transition-colors"
+        >
+          🏋️ Renforcement
+        </Link>
+        <Link
+          href="/gameplan"
+          className="flex-1 h-9 rounded-full text-muted hover:text-foreground font-semibold flex items-center justify-center transition-colors"
+        >
+          ♟️ Gameplan
+        </Link>
+      </div>
+
       <HistoryTab />
     </div>
   );

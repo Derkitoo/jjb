@@ -211,18 +211,39 @@ export interface MatchLog {
 
 export type ThemeId = "samurai" | "ronin" | "gold" | "cyber";
 
+export interface WorkoutExercise {
+  name: string;
+  sets: number;
+  reps: number;
+  weightKg?: number;
+}
+
+export interface WorkoutSession {
+  id: string;
+  date: string; // yyyy-mm-dd
+  title: string;
+  durationMin: number;
+  intensity: number; // 1-5
+  exercises: WorkoutExercise[];
+  notes?: string;
+}
+
+export interface ExercisePR {
+  id: string;
+  exerciseName: string;
+  maxWeightKg?: number;
+  maxReps?: number;
+  date: string;
+}
+
 export interface Security {
-  // Code à 4 chiffres (ou plus) optionnel. Tant qu'il vaut null, tout le
-  // monde a un accès complet (aucune restriction). Une fois défini, l'accès
-  // "admin" (suppression, réinitialisation) doit être déverrouillé avec ce
-  // code — sinon l'app se comporte en mode visiteur (lecture + ajout only).
-  // ⚠️ Stocké en clair dans le localStorage : un simple frein contre les
-  // suppressions accidentelles par un visiteur, pas une vraie sécurité.
   adminPin: string | null;
 }
 
 export interface AppData {
   sessions: TrainingSession[];
+  workoutSessions: WorkoutSession[];
+  exercisePRs: ExercisePR[];
   recipes: Recipe[];
   weighIns: WeighIn[];
   techniques: Technique[];

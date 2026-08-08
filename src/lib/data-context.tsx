@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   AppData,
+  ExercisePR,
   GameplanNode,
   Goals,
   MatchLog,
@@ -20,6 +21,7 @@ import {
   UserGrade,
   WeighIn,
   WeightCut,
+  WorkoutSession,
 } from "./types";
 import { SEED_RECIPES } from "./seed-recipes";
 import { SEED_TECHNIQUES } from "./seed-techniques";
@@ -54,7 +56,6 @@ export const SEED_GAMEPLAN: GameplanNode[] = [
     type: "submission",
     parentId: "gp-3",
     notes: "Isoler le coude, passer la jambe par-dessus la tête.",
-    videoUrl: "https://www.youtube.com/watch?v=k2Z6aY2y1vM",
   },
 ];
 
@@ -64,8 +65,8 @@ const DEFAULT_USER_GRADE: UserGrade = {
 };
 
 const DEFAULT_GOALS: Goals = {
-  weeklySessionsTarget: null,
-  targetWeightKg: null,
+  weeklySessionsTarget: 4,
+  targetWeightKg: 76,
 };
 
 const DEFAULT_NUTRITION_PROFILE: NutritionProfile = {
@@ -87,9 +88,18 @@ const DEFAULT_SECURITY: Security = {
   adminPin: null,
 };
 
+const SEED_PRS: ExercisePR[] = [
+  { id: "pr-1", exerciseName: "Soulevé de Terre (Deadlift)", maxWeightKg: 140, date: "2026-08-01" },
+  { id: "pr-2", exerciseName: "Tractions Lestées (Gi Pull-ups)", maxWeightKg: 20, maxReps: 12, date: "2026-08-03" },
+  { id: "pr-3", exerciseName: "Kettlebell Swings (24kg)", maxReps: 30, date: "2026-08-05" },
+  { id: "pr-4", exerciseName: "Turkish Get-Up", maxWeightKg: 24, date: "2026-08-07" },
+];
+
 function emptyData(): AppData {
   return {
     sessions: [],
+    workoutSessions: [],
+    exercisePRs: SEED_PRS,
     recipes: SEED_RECIPES,
     weighIns: [],
     techniques: SEED_TECHNIQUES,
@@ -112,6 +122,11 @@ function readFromStorage(): AppData {
     const parsed = JSON.parse(raw) as Partial<AppData>;
     return {
       sessions: parsed.sessions ?? [],
+      workoutSessions: parsed.workoutSessions ?? [],
+      exercisePRs:
+        parsed.exercisePRs && parsed.exercisePRs.length > 0
+          ? parsed.exercisePRs
+          : SEED_PRS,
       recipes:
         parsed.recipes && parsed.recipes.length > 0
           ? parsed.recipes
@@ -201,6 +216,8 @@ function mutate(updater: AppData | ((d: AppData) => AppData)) {
 interface DataContextValue {
   ready: boolean;
   sessions: TrainingSession[];
+  workoutSessions: WorkoutSession[];
+  exercisePRs: ExercisePR[];
   recipes: Recipe[];
   weighIns: WeighIn[];
   techniques: Technique[];
@@ -215,6 +232,9 @@ interface DataContextValue {
   addSession: (s: Omit<TrainingSession, "id" | "createdAt">) => void;
   updateSession: (id: string, patch: Partial<TrainingSession>) => void;
   deleteSession: (id: string) => void;
+  addWorkoutSession: (w: Omit<WorkoutSession, "id">) => void;
+  deleteWorkoutSession: (id: string) => void;
+  updateExercisePR: (pr: Omit<ExercisePR, "id">) => void;
   addRecipe: (r: Omit<Recipe, "id">) => void;
   updateRecipe: (id: string, patch: Partial<Recipe>) => void;
   deleteRecipe: (id: string) => void;
@@ -259,12 +279,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const updateSession = useCallback((id: string, patch: Partial<TrainingSession>) => {
     mutate((d) => ({
       ...d,
-      sessions: d.sessions.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+      sessions: d.sessions
+        .map((s) => (s.id === id ? { ...s, ...patch } : s))
+        .sort((a, b) => b.date.localeCompare(a.date)),
     }));
   }, []);
 
   const deleteSession = useCallback((id: string) => {
     mutate((d) => ({ ...d, sessions: d.sessions.filter((s) => s.id !== id) }));
+  }, []);
+
+  const addWorkoutSession = useCallback((w: Omit<WorkoutSession, "id">) => {
+    const newSession: WorkoutSession = { ...w, id: uid() };
+    mutate((d) => ({
+      ...d,
+      workoutSessions: [newSession, ...(d.workoutSessions || [])].sort((a, b) =>
+        b.date.localeCompare(a.date)
+      ),
+    }));
+  }, []);
+
+  const deleteWorkoutSession = useCallback((id: string) => {
+    mutate((d) => ({
+      ...d,
+      workoutSessions: (d.workoutSessions || []).filter((w) => w.id !== id),
+    }));
+  }, []);
+
+  const updateExercisePR = useCallback((pr: Omit<ExercisePR, "id">) => {
+    const newPR: ExercisePR = { ...pr, id: uid() };
+    mutate((d) => {
+      const existing = (d.exercisePRs || []).filter((p) => p.exerciseName !== pr.exerciseName);
+      return {
+        ...d,
+        exercisePRs: [newPR, ...existing],
+      };
+    });
   }, []);
 
   const addRecipe = useCallback((r: Omit<Recipe, "id">) => {
@@ -411,6 +461,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
       mutate({
         sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+        workoutSessions: Array.isArray(parsed.workoutSessions)
+          ? parsed.workoutSessions
+          : [],
+        exercisePRs:
+          Array.isArray(parsed.exercisePRs) && parsed.exercisePRs.length > 0
+            ? parsed.exercisePRs
+            : SEED_PRS,
         recipes:
           Array.isArray(parsed.recipes) && parsed.recipes.length > 0
             ? parsed.recipes
@@ -452,6 +509,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const value: DataContextValue = {
     ready,
     sessions: data.sessions,
+    workoutSessions: data.workoutSessions || [],
+    exercisePRs: data.exercisePRs || [],
     recipes: data.recipes,
     weighIns: data.weighIns,
     techniques: data.techniques,
@@ -466,6 +525,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     addSession,
     updateSession,
     deleteSession,
+    addWorkoutSession,
+    deleteWorkoutSession,
+    updateExercisePR,
     addRecipe,
     updateRecipe,
     deleteRecipe,
