@@ -209,6 +209,8 @@ export interface MatchLog {
   notes?: string;
 }
 
+export type ThemeId = "samurai" | "ronin" | "gold" | "cyber";
+
 export interface Security {
   // Code à 4 chiffres (ou plus) optionnel. Tant qu'il vaut null, tout le
   // monde a un accès complet (aucune restriction). Une fois défini, l'accès
@@ -231,5 +233,6 @@ export interface AppData {
   nutritionProfile: NutritionProfile;
   weightCut: WeightCut;
   security: Security;
+  theme?: ThemeId;
 }
 

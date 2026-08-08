@@ -15,6 +15,7 @@ import {
   Recipe,
   Security,
   Technique,
+  ThemeId,
   TrainingSession,
   UserGrade,
   WeighIn,
@@ -99,6 +100,7 @@ function emptyData(): AppData {
     nutritionProfile: DEFAULT_NUTRITION_PROFILE,
     weightCut: DEFAULT_WEIGHT_CUT,
     security: DEFAULT_SECURITY,
+    theme: "samurai",
   };
 }
 
@@ -129,6 +131,7 @@ function readFromStorage(): AppData {
       nutritionProfile: { ...DEFAULT_NUTRITION_PROFILE, ...parsed.nutritionProfile },
       weightCut: { ...DEFAULT_WEIGHT_CUT, ...parsed.weightCut },
       security: { ...DEFAULT_SECURITY, ...parsed.security },
+      theme: parsed.theme ?? "samurai",
     };
   } catch {
     return emptyData();
@@ -208,6 +211,7 @@ interface DataContextValue {
   nutritionProfile: NutritionProfile;
   weightCut: WeightCut;
   security: Security;
+  theme: ThemeId;
   addSession: (s: Omit<TrainingSession, "id" | "createdAt">) => void;
   updateSession: (id: string, patch: Partial<TrainingSession>) => void;
   deleteSession: (id: string) => void;
@@ -226,6 +230,7 @@ interface DataContextValue {
   updateUserGrade: (patch: Partial<UserGrade>) => void;
   addMatchLog: (m: Omit<MatchLog, "id">) => void;
   deleteMatchLog: (id: string) => void;
+  updateTheme: (theme: ThemeId) => void;
   updateGoals: (patch: Partial<Goals>) => void;
   updateNutritionProfile: (patch: Partial<NutritionProfile>) => void;
   updateWeightCut: (patch: Partial<WeightCut>) => void;
@@ -360,6 +365,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     mutate((d) => ({ ...d, matchLogs: d.matchLogs.filter((m) => m.id !== id) }));
   }, []);
 
+  const updateTheme = useCallback((theme: ThemeId) => {
+    mutate((d) => ({ ...d, theme }));
+  }, []);
+
   const updateGoals = useCallback((patch: Partial<Goals>) => {
     mutate((d) => ({ ...d, goals: { ...d.goals, ...patch } }));
   }, []);
@@ -424,6 +433,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         },
         weightCut: { ...DEFAULT_WEIGHT_CUT, ...parsed.weightCut },
         security: { ...DEFAULT_SECURITY, ...parsed.security },
+        theme: parsed.theme ?? "samurai",
       });
       return { ok: true };
     } catch {
@@ -434,6 +444,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const resetData = useCallback(() => {
     mutate(emptyData());
   }, []);
+
+  if (typeof document !== "undefined" && ready) {
+    document.documentElement.setAttribute("data-theme", data.theme || "samurai");
+  }
 
   const value: DataContextValue = {
     ready,
@@ -448,6 +462,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     nutritionProfile: data.nutritionProfile,
     weightCut: data.weightCut,
     security: data.security,
+    theme: data.theme || "samurai",
     addSession,
     updateSession,
     deleteSession,
@@ -466,6 +481,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateUserGrade,
     addMatchLog,
     deleteMatchLog,
+    updateTheme,
     updateGoals,
     updateNutritionProfile,
     updateWeightCut,

@@ -8,6 +8,7 @@ import { WeightChart } from "@/components/WeightChart";
 import { WeightCutCard } from "@/components/WeightCutCard";
 import { MatchLogCard } from "@/components/MatchLogCard";
 import { AccessCard } from "@/components/AccessCard";
+import { ThemeSelectorCard } from "@/components/ThemeSelectorCard";
 
 import { DataSyncModal } from "@/components/DataSyncModal";
 
@@ -83,6 +84,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <SectionTitle title="Réglages" subtitle="Tes données restent sur cet appareil" />
+
+      <ThemeSelectorCard />
 
       <div>
         <h2 className="font-semibold mb-2">Suivi du poids</h2>
