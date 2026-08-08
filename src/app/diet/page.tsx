@@ -97,14 +97,23 @@ function RecipesTab() {
         />
       )}
 
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-muted">
-          {recipes.length} recette{recipes.length > 1 ? "s" : ""} healthy
-        </p>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm text-muted">
+            {recipes.length} recette{recipes.length > 1 ? "s" : ""} healthy
+          </p>
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="sm:hidden shrink-0 h-9 px-3.5 rounded-full bg-accent-2 text-white font-semibold text-xs shadow-md transition-all active:scale-95"
+          >
+            {showForm ? "Fermer" : "+ Recette"}
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between sm:justify-end gap-2">
           <button
             onClick={() => setShowShoppingList(true)}
-            className="shrink-0 h-10 px-3.5 rounded-full bg-accent-2/20 hover:bg-accent-2 border border-accent-2/40 text-accent-2 hover:text-white font-semibold text-xs transition-all active:scale-95 flex items-center gap-1.5"
+            className="shrink-0 h-9 px-3 rounded-full bg-accent-2/20 hover:bg-accent-2 border border-accent-2/40 text-accent-2 hover:text-white font-semibold text-xs transition-all active:scale-95 flex items-center gap-1.5"
           >
             🛒 Liste de Courses
           </button>
@@ -112,7 +121,7 @@ function RecipesTab() {
             <button
               onClick={() => setView("grille")}
               aria-label="Vue grille"
-              className={`h-8 w-8 rounded-full text-sm transition-colors ${
+              className={`h-8 w-8 rounded-full text-xs font-bold transition-colors ${
                 view === "grille" ? "bg-accent-2 text-white" : "text-muted"
               }`}
             >
@@ -121,7 +130,7 @@ function RecipesTab() {
             <button
               onClick={() => setView("liste")}
               aria-label="Vue liste"
-              className={`h-8 w-8 rounded-full text-sm transition-colors ${
+              className={`h-8 w-8 rounded-full text-xs font-bold transition-colors ${
                 view === "liste" ? "bg-accent-2 text-white" : "text-muted"
               }`}
             >
@@ -130,7 +139,7 @@ function RecipesTab() {
           </div>
           <button
             onClick={() => setShowForm((v) => !v)}
-            className="shrink-0 h-10 px-4 rounded-full bg-accent-2 text-white font-semibold text-sm"
+            className="hidden sm:block shrink-0 h-9 px-4 rounded-full bg-accent-2 text-white font-semibold text-xs shadow-md transition-all active:scale-95"
           >
             {showForm ? "Fermer" : "+ Recette"}
           </button>

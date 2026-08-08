@@ -44,26 +44,35 @@ export default function NavBar() {
         </nav>
       </header>
 
-      {/* Barre du bas (mobile & foldables < 1024px) */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
-        <ul className="grid grid-cols-6">
-          {ITEMS.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
-                    active ? "text-accent" : "text-muted"
-                  }`}
-                >
-                  <span className="text-lg leading-none">{item.icon}</span>
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      {/* Barre du bas (mobile & foldables < 1024px) : Floating Glassmorphic Dock */}
+      <nav className="lg:hidden fixed bottom-2 inset-x-2 sm:inset-x-6 z-40 pb-[env(safe-area-inset-bottom)]">
+        <div className="bg-surface/85 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/90 p-1.5">
+          <ul className="grid grid-cols-6 items-center">
+            {ITEMS.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`relative flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[10px] font-bold transition-all duration-200 active:scale-95 ${
+                      active
+                        ? "bg-accent/15 text-accent border border-accent/30 shadow-[0_0_12px_rgba(225,29,72,0.3)] font-black"
+                        : "text-muted hover:text-foreground hover:bg-surface-2/60"
+                    }`}
+                  >
+                    <span className={`text-base leading-none transition-transform duration-200 ${active ? "scale-110" : ""}`}>
+                      {item.icon}
+                    </span>
+                    <span className="truncate max-w-full tracking-tight">{item.label}</span>
+                    {active && (
+                      <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_6px_#e11d48]" />
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </nav>
     </>
   );
