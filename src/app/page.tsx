@@ -11,6 +11,8 @@ import {
 } from "@/lib/stats";
 
 import { PwaInstallCard } from "@/components/PwaInstallCard";
+import { BeltGradeCard } from "@/components/BeltGradeCard";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 
 // Choix déterministe (pas de Math.random dans le rendu) : la suggestion
 // change au fil de tes séances plutôt qu'à chaque re-render.
@@ -46,6 +48,10 @@ export default function DashboardPage() {
           Reste régulier sur le tatami, et régule ton assiette.
         </p>
       </div>
+
+      <BeltGradeCard />
+
+      <ActivityHeatmap />
 
       <div className="grid grid-cols-2 gap-3">
         <Card className="text-center">

@@ -10,11 +10,13 @@ import {
   AppData,
   GameplanNode,
   Goals,
+  MatchLog,
   NutritionProfile,
   Recipe,
   Security,
   Technique,
   TrainingSession,
+  UserGrade,
   WeighIn,
   WeightCut,
 } from "./types";
@@ -55,6 +57,11 @@ export const SEED_GAMEPLAN: GameplanNode[] = [
   },
 ];
 
+const DEFAULT_USER_GRADE: UserGrade = {
+  belt: "blanche",
+  stripes: 0,
+};
+
 const DEFAULT_GOALS: Goals = {
   weeklySessionsTarget: null,
   targetWeightKg: null,
@@ -86,6 +93,8 @@ function emptyData(): AppData {
     weighIns: [],
     techniques: SEED_TECHNIQUES,
     gameplanNodes: SEED_GAMEPLAN,
+    userGrade: DEFAULT_USER_GRADE,
+    matchLogs: [],
     goals: DEFAULT_GOALS,
     nutritionProfile: DEFAULT_NUTRITION_PROFILE,
     weightCut: DEFAULT_WEIGHT_CUT,
@@ -114,6 +123,8 @@ function readFromStorage(): AppData {
         parsed.gameplanNodes && parsed.gameplanNodes.length > 0
           ? parsed.gameplanNodes
           : SEED_GAMEPLAN,
+      userGrade: { ...DEFAULT_USER_GRADE, ...parsed.userGrade },
+      matchLogs: parsed.matchLogs ?? [],
       goals: { ...DEFAULT_GOALS, ...parsed.goals },
       nutritionProfile: { ...DEFAULT_NUTRITION_PROFILE, ...parsed.nutritionProfile },
       weightCut: { ...DEFAULT_WEIGHT_CUT, ...parsed.weightCut },
@@ -191,6 +202,8 @@ interface DataContextValue {
   weighIns: WeighIn[];
   techniques: Technique[];
   gameplanNodes: GameplanNode[];
+  userGrade: UserGrade;
+  matchLogs: MatchLog[];
   goals: Goals;
   nutritionProfile: NutritionProfile;
   weightCut: WeightCut;
@@ -210,6 +223,9 @@ interface DataContextValue {
   addGameplanNode: (node: Omit<GameplanNode, "id">) => void;
   updateGameplanNode: (id: string, patch: Partial<GameplanNode>) => void;
   deleteGameplanNode: (id: string) => void;
+  updateUserGrade: (patch: Partial<UserGrade>) => void;
+  addMatchLog: (m: Omit<MatchLog, "id">) => void;
+  deleteMatchLog: (id: string) => void;
   updateGoals: (patch: Partial<Goals>) => void;
   updateNutritionProfile: (patch: Partial<NutritionProfile>) => void;
   updateWeightCut: (patch: Partial<WeightCut>) => void;
@@ -327,6 +343,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const updateUserGrade = useCallback((patch: Partial<UserGrade>) => {
+    mutate((d) => ({ ...d, userGrade: { ...d.userGrade, ...patch } }));
+  }, []);
+
+  const addMatchLog = useCallback((m: Omit<MatchLog, "id">) => {
+    mutate((d) => ({
+      ...d,
+      matchLogs: [{ ...m, id: uid() }, ...d.matchLogs].sort((a, b) =>
+        b.date.localeCompare(a.date)
+      ),
+    }));
+  }, []);
+
+  const deleteMatchLog = useCallback((id: string) => {
+    mutate((d) => ({ ...d, matchLogs: d.matchLogs.filter((m) => m.id !== id) }));
+  }, []);
+
   const updateGoals = useCallback((patch: Partial<Goals>) => {
     mutate((d) => ({ ...d, goals: { ...d.goals, ...patch } }));
   }, []);
@@ -382,6 +415,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           Array.isArray(parsed.gameplanNodes) && parsed.gameplanNodes.length > 0
             ? parsed.gameplanNodes
             : SEED_GAMEPLAN,
+        userGrade: { ...DEFAULT_USER_GRADE, ...parsed.userGrade },
+        matchLogs: Array.isArray(parsed.matchLogs) ? parsed.matchLogs : [],
         goals: { ...DEFAULT_GOALS, ...parsed.goals },
         nutritionProfile: {
           ...DEFAULT_NUTRITION_PROFILE,
@@ -407,6 +442,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     weighIns: data.weighIns,
     techniques: data.techniques,
     gameplanNodes: data.gameplanNodes,
+    userGrade: data.userGrade,
+    matchLogs: data.matchLogs,
     goals: data.goals,
     nutritionProfile: data.nutritionProfile,
     weightCut: data.weightCut,
@@ -426,6 +463,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     addGameplanNode,
     updateGameplanNode,
     deleteGameplanNode,
+    updateUserGrade,
+    addMatchLog,
+    deleteMatchLog,
     updateGoals,
     updateNutritionProfile,
     updateWeightCut,

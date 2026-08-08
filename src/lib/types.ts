@@ -182,6 +182,33 @@ export interface GameplanNode {
   videoUrl?: string;
 }
 
+export interface UserGrade {
+  belt: Belt;
+  stripes: 0 | 1 | 2 | 3 | 4;
+  promoDate?: string | null;
+}
+
+export type MatchResult = "win" | "loss";
+export type MatchMethod = "submission" | "points" | "decision" | "dq";
+
+export const MATCH_METHOD_LABELS: Record<MatchMethod, string> = {
+  submission: "Soumission",
+  points: "Aux points",
+  decision: "Décision de l'arbitre",
+  dq: "Disqualification",
+};
+
+export interface MatchLog {
+  id: string;
+  competitionName: string;
+  date: string; // yyyy-mm-dd
+  opponentName: string;
+  result: MatchResult;
+  method: MatchMethod;
+  techniqueName?: string;
+  notes?: string;
+}
+
 export interface Security {
   // Code à 4 chiffres (ou plus) optionnel. Tant qu'il vaut null, tout le
   // monde a un accès complet (aucune restriction). Une fois défini, l'accès
@@ -198,6 +225,8 @@ export interface AppData {
   weighIns: WeighIn[];
   techniques: Technique[];
   gameplanNodes: GameplanNode[];
+  userGrade: UserGrade;
+  matchLogs: MatchLog[];
   goals: Goals;
   nutritionProfile: NutritionProfile;
   weightCut: WeightCut;

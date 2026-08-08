@@ -6,6 +6,7 @@ import { useAdmin } from "@/lib/admin-context";
 import { Card, SectionTitle } from "@/components/Card";
 import { WeightChart } from "@/components/WeightChart";
 import { WeightCutCard } from "@/components/WeightCutCard";
+import { MatchLogCard } from "@/components/MatchLogCard";
 import { AccessCard } from "@/components/AccessCard";
 
 function todayISO() {
@@ -175,6 +176,11 @@ export default function SettingsPage() {
             </button>
           </form>
         </Card>
+      </div>
+
+      <div>
+        <h2 className="font-semibold mb-2">Carnet de Matchs & Compétition</h2>
+        <MatchLogCard />
       </div>
 
       <div>
