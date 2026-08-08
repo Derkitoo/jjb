@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   title: "BJJ Coach - Suivi & Chrono JJB",
   description: "Suivi de tes séances de jiu-jitsu brésilien, chrono d'entraînement et diète healthy.",
   manifest: "/jjb/manifest.webmanifest",
+  icons: {
+    icon: "/jjb/icon-192.png",
+    apple: "/jjb/apple-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
