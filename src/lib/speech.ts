@@ -58,19 +58,19 @@ export function speak(text: string, pitch = 1.0, rate = 1.05) {
 }
 
 export function speakDbzRoundStart(roundNum: number) {
-  playDbzPowerup();
+  playAudioFile("dbz-round-start.mp3");
 }
 
 export function speakDbzLastMinute() {
-  playAudioFile("dbz-yt-extract.mp3");
+  playAudioFile("dbz-last-minute.mp3");
 }
 
 export function speakDbzRest() {
-  playDbzSenzu();
+  playAudioFile("dbz-rest.mp3");
 }
 
 export function speakDbzFinish() {
-  playDbzPowerup();
+  playAudioFile("dbz-finish.mp3");
 }
 
 // Classic voices

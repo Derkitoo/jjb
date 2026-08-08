@@ -134,52 +134,36 @@ function RoundTimer() {
           Clique pour écouter les vrais extraits audio officiels téléchargeables tirés de l&apos;anime DBZ :
         </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 text-xs">
           <button
             onClick={() => speakDbzRoundStart(1)}
-            className="p-2.5 rounded-xl bg-surface-2 hover:bg-surface border border-amber-500/40 text-amber-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
+            className="p-3 rounded-xl bg-surface-2 hover:bg-surface border border-amber-500/40 text-amber-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
           >
-            <span>🔥 Aura Super Saiyan</span>
+            <span>💥 Kaio-Ken x4 (2:43-2:53)</span>
             <span className="text-[10px] text-muted font-normal">Début de round</span>
           </button>
 
           <button
-            onClick={() => playDbzScouter()}
-            className="p-2.5 rounded-xl bg-surface-2 hover:bg-surface border border-cyan-500/40 text-cyan-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
-          >
-            <span>📟 Détecteur Scouter</span>
-            <span className="text-[10px] text-muted font-normal">Bip décompte</span>
-          </button>
-
-          <button
             onClick={() => speakDbzLastMinute()}
-            className="p-2.5 rounded-xl bg-surface-2 hover:bg-surface border border-rose-500/40 text-rose-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1 ring-2 ring-rose-500/50"
+            className="p-3 rounded-xl bg-surface-2 hover:bg-surface border border-rose-500/40 text-rose-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1 ring-1 ring-rose-500/40"
           >
-            <span>🎬 YouTube Extraît (0:23-0:27)</span>
-            <span className="text-[10px] text-rose-400 font-bold">Dernière min (60s) 🔥</span>
-          </button>
-
-          <button
-            onClick={() => playDbzTeleport()}
-            className="p-2.5 rounded-xl bg-surface-2 hover:bg-surface border border-indigo-500/40 text-indigo-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
-          >
-            <span>🌀 Shunkan Ido</span>
-            <span className="text-[10px] text-muted font-normal">Téléportation</span>
+            <span>⚡ Kamehameha (1:45-1:55)</span>
+            <span className="text-[10px] text-rose-400 font-bold">Dernière minute (60s)</span>
           </button>
 
           <button
             onClick={() => speakDbzRest()}
-            className="p-2.5 rounded-xl bg-surface-2 hover:bg-surface border border-emerald-500/40 text-emerald-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
+            className="p-3 rounded-xl bg-surface-2 hover:bg-surface border border-emerald-500/40 text-emerald-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
           >
-            <span>🫘 Haricot Senzu</span>
-            <span className="text-[10px] text-muted font-normal">Repos de round</span>
+            <span>🫘 Récupération (0:23-0:28)</span>
+            <span className="text-[10px] text-muted font-normal">Temps de repos</span>
           </button>
 
           <button
             onClick={() => speakDbzFinish()}
-            className="p-2.5 rounded-xl bg-surface-2 hover:bg-surface border border-purple-500/40 text-purple-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
+            className="p-3 rounded-xl bg-surface-2 hover:bg-surface border border-purple-500/40 text-purple-300 font-semibold text-left transition-all active:scale-95 flex flex-col gap-1"
           >
-            <span>🏆 Victoire Saiyan</span>
+            <span>👑 Guerrier Élite (0:37-0:43)</span>
             <span className="text-[10px] text-muted font-normal">Fin de séance</span>
           </button>
         </div>
