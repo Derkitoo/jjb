@@ -11,8 +11,8 @@ export function QuickActionModal({ onClose }: QuickActionModalProps) {
   const ACTIONS = [
     {
       href: "/timer",
-      title: "Lancer un Chrono DBZ",
-      desc: "Minuteur de rounds avec sons d'anime mythiques",
+      title: "Lancer un Chrono",
+      desc: "Minuteur de rounds & chrono d'entraînement",
       icon: "⏱️",
       color: "border-amber-500/40 bg-amber-500/10 text-amber-300",
     },

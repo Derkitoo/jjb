@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useData } from "@/lib/data-context";
 import { Card, SectionTitle } from "@/components/Card";
 import { useAdmin } from "@/lib/admin-context";
@@ -129,10 +130,19 @@ export default function WorkoutPage() {
 
   return (
     <div className="space-y-6">
-      <SectionTitle
-        title="Renforcement Musculaire"
-        subtitle="Préparation physique & conditionnement spécifique au Jiu-Jitsu Brésilien"
-      />
+      <div className="flex items-center justify-between">
+        <SectionTitle
+          title="Renforcement Musculaire"
+          subtitle="Préparation physique & conditionnement spécifique au Jiu-Jitsu Brésilien"
+        />
+        <Link
+          href="/timer"
+          className="shrink-0 h-10 px-4 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all"
+        >
+          <span>⏱️</span>
+          <span>Lancer un Chrono</span>
+        </Link>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2 bg-surface-2 border border-border rounded-full p-1">
