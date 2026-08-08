@@ -1,12 +1,14 @@
-const CACHE_NAME = "bjj-coach-v1";
+const CACHE_NAME = "bjj-coach-v2";
 const ASSETS_TO_CACHE = [
-  "/",
-  "/sessions",
-  "/timer",
-  "/diet",
-  "/settings",
-  "/manifest.webmanifest",
-  "/favicon.ico"
+  "/jjb/",
+  "/jjb/sessions",
+  "/jjb/gameplan",
+  "/jjb/timer",
+  "/jjb/diet",
+  "/jjb/settings",
+  "/jjb/manifest.webmanifest",
+  "/jjb/icon-192.png",
+  "/jjb/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -62,7 +64,7 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() => {
           // Offline fallback
-          return caches.match("/");
+          return caches.match("/jjb/");
         });
     })
   );
