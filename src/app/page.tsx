@@ -10,6 +10,8 @@ import {
   totalMinutesThisWeek,
 } from "@/lib/stats";
 
+import { PwaInstallCard } from "@/components/PwaInstallCard";
+
 // Choix déterministe (pas de Math.random dans le rendu) : la suggestion
 // change au fil de tes séances plutôt qu'à chaque re-render.
 function pickSuggestion(recipes: Recipe[], sessionsCount: number): Recipe | null {
@@ -37,6 +39,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <PwaInstallCard />
       <div>
         <h1 className="text-2xl font-bold">Salut, champion 🥋</h1>
         <p className="text-muted text-sm mt-1">
@@ -109,18 +112,24 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         <Link
           href="/timer"
-          className="rounded-2xl bg-accent text-white font-semibold text-center py-4 hover:opacity-90 transition-opacity"
+          className="rounded-2xl bg-accent text-white font-semibold text-center py-3.5 text-xs md:text-sm hover:opacity-90 transition-opacity flex flex-col items-center justify-center gap-1"
         >
-          ⏱️ Lancer le chrono
+          <span className="text-lg">⏱️</span> Chrono
+        </Link>
+        <Link
+          href="/techniques"
+          className="rounded-2xl bg-surface-2 border border-border text-center font-semibold py-3.5 text-xs md:text-sm hover:bg-surface transition-colors flex flex-col items-center justify-center gap-1"
+        >
+          <span className="text-lg">♟️</span> Gameplan
         </Link>
         <Link
           href="/sessions"
-          className="rounded-2xl bg-surface-2 border border-border text-center font-semibold py-4 hover:bg-surface transition-colors"
+          className="rounded-2xl bg-surface-2 border border-border text-center font-semibold py-3.5 text-xs md:text-sm hover:bg-surface transition-colors flex flex-col items-center justify-center gap-1"
         >
-          ➕ Ajouter une séance
+          <span className="text-lg">➕</span> Séances
         </Link>
       </div>
 

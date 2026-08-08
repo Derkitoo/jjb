@@ -9,6 +9,8 @@ import {
   useState,
 } from "react";
 import { playFinish, playGo, playRestStart, playTick } from "./beep";
+import { vibrateFinish, vibrateGo, vibrateRest, vibrateTick } from "./haptics";
+import { speakFinish, speakLastMinute, speakRest, speakRoundStart } from "./speech";
 
 // État vivant dans un Provider monté une fois dans le layout racine : il
 // survit à la navigation entre pages (le layout ne se démonte pas), ce qui
@@ -21,6 +23,7 @@ export interface RoundConfig {
   workMin: number;
   restMin: number;
   prepSec: number;
+  voiceCoachEnabled?: boolean;
 }
 
 interface TimerContextValue {
@@ -50,6 +53,7 @@ const DEFAULT_CONFIG: RoundConfig = {
   workMin: 5,
   restMin: 1,
   prepSec: 10,
+  voiceCoachEnabled: true,
 };
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
@@ -59,10 +63,19 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [remainingMs, setRemainingMs] = useState(0);
   const [roundRunning, setRoundRunning] = useState(false);
 
+  // Chrono libre state
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [stopwatchRunning, setStopwatchRunning] = useState(false);
+  const stopwatchStartRef = useRef<number | null>(null);
+
   const phaseEndAtRef = useRef<number | null>(null);
   const lastTickSecondRef = useRef<number | null>(null);
+  const spokeLastMinuteRef = useRef(false);
   const configRef = useRef(config);
   const currentRoundRef = useRef(currentRound);
+
+  // Screen Wake Lock Sentinel Reference
+  const wakeLockRef = useRef<any>(null);
 
   useEffect(() => {
     configRef.current = config;
@@ -71,17 +84,52 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     currentRoundRef.current = currentRound;
   }, [currentRound]);
 
+  // Screen Wake Lock handler to keep screen awake while timer is running
+  useEffect(() => {
+    const isTimerActive = roundRunning || stopwatchRunning;
+    
+    async function requestWakeLock() {
+      if (isTimerActive && typeof window !== "undefined" && "wakeLock" in navigator) {
+        try {
+          if (!wakeLockRef.current) {
+            wakeLockRef.current = await (navigator as any).wakeLock.request("screen");
+          }
+        } catch (err) {
+          console.log("Wake Lock unsupported or denied:", err);
+        }
+      } else if (!isTimerActive && wakeLockRef.current) {
+        try {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+        } catch (err) {}
+      }
+    }
+
+    requestWakeLock();
+
+    return () => {
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release().catch(() => {});
+        wakeLockRef.current = null;
+      }
+    };
+  }, [roundRunning, stopwatchRunning]);
+
   const setConfig = useCallback((patch: Partial<RoundConfig>) => {
     setConfigState((c) => ({ ...c, ...patch }));
   }, []);
 
   const advancePhase = useCallback(() => {
-    const { workMin, restMin, rounds } = configRef.current;
+    const { workMin, restMin, rounds, voiceCoachEnabled } = configRef.current;
     const workMs = workMin * 60 * 1000;
     const restMs = restMin * 60 * 1000;
+    spokeLastMinuteRef.current = false;
+
     setPhase((prevPhase) => {
       if (prevPhase === "prep") {
         playGo();
+        vibrateGo();
+        if (voiceCoachEnabled) speakRoundStart(currentRoundRef.current);
         phaseEndAtRef.current = Date.now() + workMs;
         setRemainingMs(workMs);
         lastTickSecondRef.current = null;
@@ -91,11 +139,15 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         const isLastRound = currentRoundRef.current >= rounds;
         if (isLastRound) {
           playFinish();
+          vibrateFinish();
+          if (voiceCoachEnabled) speakFinish();
           setRoundRunning(false);
           setRemainingMs(0);
           return "done";
         }
         playRestStart();
+        vibrateRest();
+        if (voiceCoachEnabled) speakRest();
         phaseEndAtRef.current = Date.now() + restMs;
         setRemainingMs(restMs);
         lastTickSecondRef.current = null;
@@ -103,6 +155,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       }
       if (prevPhase === "rest") {
         playGo();
+        vibrateGo();
+        const nextRound = currentRoundRef.current + 1;
+        if (voiceCoachEnabled) speakRoundStart(nextRound);
         setCurrentRound((r) => r + 1);
         phaseEndAtRef.current = Date.now() + workMs;
         setRemainingMs(workMs);
@@ -124,14 +179,27 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       } else {
         setRemainingMs(remaining);
         const sec = Math.ceil(remaining / 1000);
+
+        // Annonce vocale de la dernière minute
+        if (
+          phase === "work" &&
+          sec === 60 &&
+          !spokeLastMinuteRef.current &&
+          configRef.current.voiceCoachEnabled
+        ) {
+          spokeLastMinuteRef.current = true;
+          speakLastMinute();
+        }
+
         if (sec <= 3 && sec >= 1 && lastTickSecondRef.current !== sec) {
           lastTickSecondRef.current = sec;
           playTick();
+          vibrateTick();
         }
       }
     }, 100);
     return () => clearInterval(interval);
-  }, [roundRunning, advancePhase]);
+  }, [roundRunning, phase, advancePhase]);
 
   const startRoundTimer = useCallback(() => {
     setPhase((prevPhase) => {
@@ -174,10 +242,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // --- Chrono libre ---
-  const [elapsedMs, setElapsedMs] = useState(0);
-  const [stopwatchRunning, setStopwatchRunning] = useState(false);
-  const stopwatchStartRef = useRef<number | null>(null);
-
   useEffect(() => {
     if (!stopwatchRunning) return;
     const interval = setInterval(() => {

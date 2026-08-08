@@ -58,6 +58,8 @@ function HistoryTab() {
   const [intensity, setIntensity] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [techniques, setTechniques] = useState("");
   const [notes, setNotes] = useState("");
+  const [tapsGivenCount, setTapsGivenCount] = useState<number | undefined>(undefined);
+  const [tapsReceivedCount, setTapsReceivedCount] = useState<number | undefined>(undefined);
 
   if (!ready) return <p className="text-muted text-sm">Chargement…</p>;
 
@@ -68,11 +70,22 @@ function HistoryTab() {
     setIntensity(3);
     setTechniques("");
     setNotes("");
+    setTapsGivenCount(undefined);
+    setTapsReceivedCount(undefined);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    addSession({ date, type, durationMin, intensity, techniques, notes });
+    addSession({
+      date,
+      type,
+      durationMin,
+      intensity,
+      techniques,
+      notes,
+      tapsGivenCount,
+      tapsReceivedCount,
+    });
     resetForm();
     setShowForm(false);
   }
@@ -158,6 +171,42 @@ function HistoryTab() {
               </div>
             </div>
 
+            {/* Sparring Taps stats */}
+            <div className="grid grid-cols-2 gap-3 bg-surface-2/60 p-3 rounded-xl border border-border">
+              <label className="text-sm">
+                <span className="block text-xs text-emerald-400 font-semibold mb-1">
+                  ⚡ Soumissions Placées (Taps)
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  max={50}
+                  placeholder="0"
+                  value={tapsGivenCount ?? ""}
+                  onChange={(e) =>
+                    setTapsGivenCount(e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  className="w-full bg-surface border border-border rounded-lg px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="block text-xs text-rose-400 font-semibold mb-1">
+                  🛡️ Soumissions Subies (Taps)
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  max={50}
+                  placeholder="0"
+                  value={tapsReceivedCount ?? ""}
+                  onChange={(e) =>
+                    setTapsReceivedCount(e.target.value === "" ? undefined : Number(e.target.value))
+                  }
+                  className="w-full bg-surface border border-border rounded-lg px-3 py-1.5 text-sm"
+                />
+              </label>
+            </div>
+
             <label className="text-sm block">
               <span className="block text-muted mb-1">
                 Techniques travaillées
@@ -184,7 +233,7 @@ function HistoryTab() {
 
             <button
               type="submit"
-              className="w-full h-11 rounded-full bg-accent text-white font-semibold"
+              className="w-full h-11 rounded-full bg-accent text-white font-semibold shadow-md active:scale-95 transition-transform"
             >
               Enregistrer la séance
             </button>
@@ -215,6 +264,8 @@ function SessionRow({
 }) {
   const [open, setOpen] = useState(false);
   const { isAdmin } = useAdmin();
+  const hasTaps = session.tapsGivenCount != null || session.tapsReceivedCount != null;
+
   return (
     <Card>
       <button
@@ -222,7 +273,14 @@ function SessionRow({
         className="w-full flex items-center justify-between text-left"
       >
         <div>
-          <div className="font-medium">{SESSION_TYPE_LABELS[session.type]}</div>
+          <div className="font-medium flex items-center gap-2">
+            {SESSION_TYPE_LABELS[session.type]}
+            {hasTaps && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                ⚡ {session.tapsGivenCount ?? 0} / 🛡️ {session.tapsReceivedCount ?? 0}
+              </span>
+            )}
+          </div>
           <div className="text-xs text-muted">
             {new Date(session.date).toLocaleDateString("fr-FR", {
               weekday: "long",
@@ -240,6 +298,12 @@ function SessionRow({
       </button>
       {open && (
         <div className="mt-3 pt-3 border-t border-border text-sm space-y-2">
+          {hasTaps && (
+            <p className="flex items-center gap-3 text-xs font-semibold">
+              <span className="text-emerald-400">⚡ Soumissions données : {session.tapsGivenCount ?? 0}</span>
+              <span className="text-rose-400">🛡️ Soumissions subies : {session.tapsReceivedCount ?? 0}</span>
+            </p>
+          )}
           {session.techniques && (
             <p>
               <span className="text-muted">Techniques : </span>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useData } from "@/lib/data-context";
 import { useTimer } from "@/lib/timer-context";
 import { Card, SectionTitle } from "@/components/Card";
+import { RadialProgressRing } from "@/components/RadialProgressRing";
 
 function formatTime(ms: number) {
   const totalSec = Math.max(0, Math.ceil(ms / 1000));
@@ -15,9 +16,9 @@ function formatTime(ms: number) {
 const PHASE_LABEL: Record<string, string> = {
   idle: "Prêt",
   prep: "Préparation",
-  work: "Round",
-  rest: "Repos",
-  done: "Terminé 🎉",
+  work: "Round de Combat",
+  rest: "Temps de Repos",
+  done: "Entraînement Terminé 🎉",
 };
 
 export default function TimerPage() {
@@ -26,7 +27,7 @@ export default function TimerPage() {
     <div className="space-y-6">
       <SectionTitle
         title="Chrono"
-        subtitle="Minuteur de rounds ou chrono libre pour ta séance"
+        subtitle="Minuteur de rounds intelligent avec coach vocal et presets"
       />
       <div className="flex gap-2 bg-surface-2 border border-border rounded-full p-1">
         <button
@@ -35,7 +36,7 @@ export default function TimerPage() {
             tab === "rounds" ? "bg-accent text-white" : "text-muted"
           }`}
         >
-          Rounds
+          Rounds & Presets
         </button>
         <button
           onClick={() => setTab("free")}
@@ -64,7 +65,7 @@ function RoundTimer() {
     pauseRoundTimer,
     resetRoundTimer,
   } = useTimer();
-  const { rounds, workMin, restMin, prepSec } = config;
+  const { rounds, workMin, restMin, prepSec, voiceCoachEnabled = true } = config;
   const [saved, setSaved] = useState(false);
 
   function handleStart() {
@@ -89,77 +90,148 @@ function RoundTimer() {
     setSaved(true);
   }
 
+  function applyPreset(p: { rounds: number; workMin: number; restMin: number; prepSec: number }) {
+    resetRoundTimer();
+    setConfig(p);
+  }
+
   const workMs = workMin * 60 * 1000;
   const restMs = restMin * 60 * 1000;
   const prepMs = prepSec * 1000;
   const totalPhaseMs =
     phase === "prep" ? prepMs : phase === "rest" ? restMs : workMs;
-  const progress =
-    totalPhaseMs > 0 ? 1 - Math.max(0, remainingMs) / totalPhaseMs : 0;
+  const pct =
+    totalPhaseMs > 0 ? ((totalPhaseMs - Math.max(0, remainingMs)) / totalPhaseMs) * 100 : 0;
+
+  const ringColor =
+    phase === "rest"
+      ? "stroke-emerald-400"
+      : phase === "prep"
+      ? "stroke-amber-400"
+      : "stroke-accent";
 
   return (
     <div className="space-y-6">
       {phase === "idle" && (
-        <Card className="space-y-4">
-          <NumberField
-            label="Nombre de rounds"
-            value={rounds}
-            onChange={(v) => setConfig({ rounds: v })}
-            min={1}
-            max={20}
-          />
-          <NumberField
-            label="Durée d'un round (min)"
-            value={workMin}
-            onChange={(v) => setConfig({ workMin: v })}
-            min={1}
-            max={20}
-          />
-          <NumberField
-            label="Repos entre rounds (min)"
-            value={restMin}
-            onChange={(v) => setConfig({ restMin: v })}
-            min={0}
-            max={10}
-          />
-          <NumberField
-            label="Préparation avant le 1er round (sec)"
-            value={prepSec}
-            onChange={(v) => setConfig({ prepSec: v })}
-            min={0}
-            max={60}
-            step={5}
-          />
-        </Card>
+        <div className="space-y-4">
+          {/* Quick Presets */}
+          <Card className="space-y-3">
+            <h3 className="text-xs font-bold text-muted uppercase tracking-wider">⚡ Presets de Combat Rapides</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => applyPreset({ rounds: 5, workMin: 5, restMin: 1, prepSec: 10 })}
+                className="p-3 bg-surface-2 hover:bg-border border border-border rounded-xl text-left transition-all active:scale-95 space-y-1"
+              >
+                <div className="font-bold text-xs text-foreground">🥋 Sparring JJB Classique</div>
+                <div className="text-[11px] text-muted">5 rounds × 5 min (1m repos)</div>
+              </button>
+
+              <button
+                onClick={() => applyPreset({ rounds: 1, workMin: 10, restMin: 0, prepSec: 5 })}
+                className="p-3 bg-surface-2 hover:bg-border border border-border rounded-xl text-left transition-all active:scale-95 space-y-1"
+              >
+                <div className="font-bold text-xs text-foreground">🦈 Mode Shark Tank</div>
+                <div className="text-[11px] text-muted">1 round × 10 min non-stop</div>
+              </button>
+
+              <button
+                onClick={() => applyPreset({ rounds: 6, workMin: 3, restMin: 0.75, prepSec: 10 })}
+                className="p-3 bg-surface-2 hover:bg-border border border-border rounded-xl text-left transition-all active:scale-95 space-y-1"
+              >
+                <div className="font-bold text-xs text-foreground">🔄 Spécifique / Positions</div>
+                <div className="text-[11px] text-muted">6 rounds × 3 min (45s repos)</div>
+              </button>
+
+              <button
+                onClick={() => applyPreset({ rounds: 8, workMin: 0.33, restMin: 0.17, prepSec: 5 })}
+                className="p-3 bg-surface-2 hover:bg-border border border-border rounded-xl text-left transition-all active:scale-95 space-y-1"
+              >
+                <div className="font-bold text-xs text-foreground">⚡ Tabata Prep Physique</div>
+                <div className="text-[11px] text-muted">8 rounds × 20s (10s repos)</div>
+              </button>
+            </div>
+          </Card>
+
+          <Card className="space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <span className="text-sm font-semibold flex items-center gap-2">
+                🗣️ Voice Coach Vocal (FR)
+              </span>
+              <button
+                type="button"
+                onClick={() => setConfig({ voiceCoachEnabled: !voiceCoachEnabled })}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                  voiceCoachEnabled ? "bg-emerald-500 text-white" : "bg-surface-2 text-muted border border-border"
+                }`}
+              >
+                {voiceCoachEnabled ? "Activé ✓" : "Désactivé"}
+              </button>
+            </div>
+
+            <NumberField
+              label="Nombre de rounds"
+              value={rounds}
+              onChange={(v) => setConfig({ rounds: v })}
+              min={1}
+              max={20}
+            />
+            <NumberField
+              label="Durée d'un round (min)"
+              value={workMin}
+              onChange={(v) => setConfig({ workMin: v })}
+              min={0.1}
+              max={30}
+              step={0.5}
+            />
+            <NumberField
+              label="Repos entre rounds (min)"
+              value={restMin}
+              onChange={(v) => setConfig({ restMin: v })}
+              min={0}
+              max={10}
+              step={0.25}
+            />
+            <NumberField
+              label="Préparation avant le 1er round (sec)"
+              value={prepSec}
+              onChange={(v) => setConfig({ prepSec: v })}
+              min={0}
+              max={60}
+              step={5}
+            />
+          </Card>
+        </div>
       )}
 
-      <Card className="flex flex-col items-center py-8 gap-4">
-        <div className="text-sm uppercase tracking-wide text-muted font-semibold">
-          {PHASE_LABEL[phase]}
+      <Card className="flex flex-col items-center py-8 gap-4 bg-surface">
+        <RadialProgressRing progress={pct} size={240} strokeWidth={12} colorClass={ringColor}>
+          <div className="text-xs uppercase tracking-wider text-muted font-bold mb-1">
+            {PHASE_LABEL[phase]}
+          </div>
           {(phase === "work" || phase === "rest") && (
-            <span className="ml-2 text-foreground">
-              Round {currentRound}/{rounds}
-            </span>
+            <div className="text-xs font-semibold text-muted mb-1">
+              Round {currentRound} / {rounds}
+            </div>
           )}
-        </div>
-        <div
-          className={`text-6xl font-black tabular-nums ${
-            phase === "rest"
-              ? "text-accent-2"
-              : phase === "done"
-              ? "text-accent"
-              : "text-foreground"
-          }`}
-        >
-          {phase === "idle"
-            ? formatTime((prepSec > 0 ? prepSec : workMin * 60) * 1000)
-            : formatTime(remainingMs)}
-        </div>
+          <div
+            className={`text-5xl font-black tabular-nums tracking-tight ${
+              phase === "rest"
+                ? "text-emerald-400"
+                : phase === "done"
+                ? "text-accent"
+                : "text-foreground"
+            }`}
+          >
+            {phase === "idle"
+              ? formatTime((prepSec > 0 ? prepSec : workMin * 60) * 1000)
+              : formatTime(remainingMs)}
+          </div>
+        </RadialProgressRing>
         {phase !== "idle" && phase !== "done" && (
           <div className="w-full h-2 bg-surface-2 rounded-full overflow-hidden">
             <div
               className="h-full bg-accent transition-[width] duration-150"
-              style={{ width: `${Math.min(100, progress * 100)}%` }}
+              style={{ width: `${Math.min(100, pct)}%` }}
             />
           </div>
         )}

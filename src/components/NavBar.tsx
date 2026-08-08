@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const ITEMS = [
   { href: "/", label: "Accueil", icon: "🏠" },
   { href: "/sessions", label: "Séances", icon: "🥋" },
+  { href: "/techniques", label: "Gameplan", icon: "♟️" },
   { href: "/timer", label: "Chrono", icon: "⏱️" },
   { href: "/diet", label: "Diète", icon: "🥗" },
   { href: "/settings", label: "Réglages", icon: "⚙️" },
@@ -45,7 +46,7 @@ export default function NavBar() {
 
       {/* Barre du bas (mobile) */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
-        <ul className="grid grid-cols-5">
+        <ul className="grid grid-cols-6">
           {ITEMS.map((item) => {
             const active = pathname === item.href;
             return (

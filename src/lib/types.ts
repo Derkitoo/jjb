@@ -25,6 +25,8 @@ export interface TrainingSession {
   intensity: 1 | 2 | 3 | 4 | 5;
   techniques: string;
   notes: string;
+  tapsGivenCount?: number;
+  tapsReceivedCount?: number;
   createdAt: string; // ISO timestamp
 }
 
@@ -163,6 +165,23 @@ export interface WeightCut {
   notes: string;
 }
 
+export type GameplanStepType = "position" | "transition" | "submission";
+
+export const GAMEPLAN_STEP_LABELS: Record<GameplanStepType, string> = {
+  position: "Position de Départ",
+  transition: "Passage / Balayage",
+  submission: "Soumission Finalisatrice",
+};
+
+export interface GameplanNode {
+  id: string;
+  title: string;
+  type: GameplanStepType;
+  parentId?: string | null;
+  notes?: string;
+  videoUrl?: string;
+}
+
 export interface Security {
   // Code à 4 chiffres (ou plus) optionnel. Tant qu'il vaut null, tout le
   // monde a un accès complet (aucune restriction). Une fois défini, l'accès
@@ -178,8 +197,10 @@ export interface AppData {
   recipes: Recipe[];
   weighIns: WeighIn[];
   techniques: Technique[];
+  gameplanNodes: GameplanNode[];
   goals: Goals;
   nutritionProfile: NutritionProfile;
   weightCut: WeightCut;
   security: Security;
 }
+

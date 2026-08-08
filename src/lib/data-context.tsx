@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   AppData,
+  GameplanNode,
   Goals,
   NutritionProfile,
   Recipe,
@@ -21,6 +22,38 @@ import { SEED_RECIPES } from "./seed-recipes";
 import { SEED_TECHNIQUES } from "./seed-techniques";
 
 const STORAGE_KEY = "bjj-tracker:data:v1";
+
+export const SEED_GAMEPLAN: GameplanNode[] = [
+  {
+    id: "gp-1",
+    title: "Garde Fermée",
+    type: "position",
+    parentId: null,
+    notes: "Posture de départ classique, casser la posture de l'adversaire.",
+  },
+  {
+    id: "gp-2",
+    title: "Renversement Ciseaux (Scissor Sweep)",
+    type: "transition",
+    parentId: "gp-1",
+    notes: "Contrôle manche + col opposé, ouvrir le genou.",
+  },
+  {
+    id: "gp-3",
+    title: "Montée (Mount)",
+    type: "position",
+    parentId: "gp-2",
+    notes: "Stabiliser 3 secondes, peser sur la poitrine.",
+  },
+  {
+    id: "gp-4",
+    title: "Clé de Bras (Armbar)",
+    type: "submission",
+    parentId: "gp-3",
+    notes: "Isoler le coude, passer la jambe par-dessus la tête.",
+    videoUrl: "https://www.youtube.com/watch?v=k2Z6aY2y1vM",
+  },
+];
 
 const DEFAULT_GOALS: Goals = {
   weeklySessionsTarget: null,
@@ -52,6 +85,7 @@ function emptyData(): AppData {
     recipes: SEED_RECIPES,
     weighIns: [],
     techniques: SEED_TECHNIQUES,
+    gameplanNodes: SEED_GAMEPLAN,
     goals: DEFAULT_GOALS,
     nutritionProfile: DEFAULT_NUTRITION_PROFILE,
     weightCut: DEFAULT_WEIGHT_CUT,
@@ -72,12 +106,14 @@ function readFromStorage(): AppData {
           ? parsed.recipes
           : SEED_RECIPES,
       weighIns: parsed.weighIns ?? [],
-      // Rétrocompatible : les exports/sauvegardes créés avant l'ajout des
-      // techniques, objectifs, macros et cut de poids n'ont pas ces champs.
       techniques:
         parsed.techniques && parsed.techniques.length > 0
           ? parsed.techniques
           : SEED_TECHNIQUES,
+      gameplanNodes:
+        parsed.gameplanNodes && parsed.gameplanNodes.length > 0
+          ? parsed.gameplanNodes
+          : SEED_GAMEPLAN,
       goals: { ...DEFAULT_GOALS, ...parsed.goals },
       nutritionProfile: { ...DEFAULT_NUTRITION_PROFILE, ...parsed.nutritionProfile },
       weightCut: { ...DEFAULT_WEIGHT_CUT, ...parsed.weightCut },
@@ -154,6 +190,7 @@ interface DataContextValue {
   recipes: Recipe[];
   weighIns: WeighIn[];
   techniques: Technique[];
+  gameplanNodes: GameplanNode[];
   goals: Goals;
   nutritionProfile: NutritionProfile;
   weightCut: WeightCut;
@@ -170,6 +207,9 @@ interface DataContextValue {
   updateTechnique: (id: string, patch: Partial<Technique>) => void;
   addTechnique: (t: Omit<Technique, "id">) => void;
   deleteTechnique: (id: string) => void;
+  addGameplanNode: (node: Omit<GameplanNode, "id">) => void;
+  updateGameplanNode: (id: string, patch: Partial<GameplanNode>) => void;
+  deleteGameplanNode: (id: string) => void;
   updateGoals: (patch: Partial<Goals>) => void;
   updateNutritionProfile: (patch: Partial<NutritionProfile>) => void;
   updateWeightCut: (patch: Partial<WeightCut>) => void;
@@ -266,6 +306,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const addGameplanNode = useCallback((node: Omit<GameplanNode, "id">) => {
+    mutate((d) => ({
+      ...d,
+      gameplanNodes: [...d.gameplanNodes, { ...node, id: uid() }],
+    }));
+  }, []);
+
+  const updateGameplanNode = useCallback((id: string, patch: Partial<GameplanNode>) => {
+    mutate((d) => ({
+      ...d,
+      gameplanNodes: d.gameplanNodes.map((n) => (n.id === id ? { ...n, ...patch } : n)),
+    }));
+  }, []);
+
+  const deleteGameplanNode = useCallback((id: string) => {
+    mutate((d) => ({
+      ...d,
+      gameplanNodes: d.gameplanNodes.filter((n) => n.id !== id && n.parentId !== id),
+    }));
+  }, []);
+
   const updateGoals = useCallback((patch: Partial<Goals>) => {
     mutate((d) => ({ ...d, goals: { ...d.goals, ...patch } }));
   }, []);
@@ -317,6 +378,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           Array.isArray(parsed.techniques) && parsed.techniques.length > 0
             ? parsed.techniques
             : SEED_TECHNIQUES,
+        gameplanNodes:
+          Array.isArray(parsed.gameplanNodes) && parsed.gameplanNodes.length > 0
+            ? parsed.gameplanNodes
+            : SEED_GAMEPLAN,
         goals: { ...DEFAULT_GOALS, ...parsed.goals },
         nutritionProfile: {
           ...DEFAULT_NUTRITION_PROFILE,
@@ -341,6 +406,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     recipes: data.recipes,
     weighIns: data.weighIns,
     techniques: data.techniques,
+    gameplanNodes: data.gameplanNodes,
     goals: data.goals,
     nutritionProfile: data.nutritionProfile,
     weightCut: data.weightCut,
@@ -357,6 +423,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateTechnique,
     addTechnique,
     deleteTechnique,
+    addGameplanNode,
+    updateGameplanNode,
+    deleteGameplanNode,
     updateGoals,
     updateNutritionProfile,
     updateWeightCut,

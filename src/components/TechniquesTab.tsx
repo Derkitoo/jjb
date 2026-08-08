@@ -14,6 +14,8 @@ import {
   Technique,
   TechniqueCategory,
 } from "@/lib/types";
+import { GameplanTab } from "./GameplanTab";
+import { VideoPreviewModal } from "./VideoPreviewModal";
 
 const STATUS_ORDER: MasteryStatus[] = ["a_decouvrir", "en_cours", "maitrisee"];
 
@@ -31,6 +33,7 @@ const CATEGORY_OPTIONS = Object.entries(TECHNIQUE_CATEGORY_LABELS) as [
 export default function TechniquesTab() {
   const { techniques, updateTechnique, addTechnique, deleteTechnique } =
     useData();
+  const [mainTab, setMainTab] = useState<"syllabus" | "gameplan">("syllabus");
   const [beltFilter, setBeltFilter] = useState<Belt | "all">("all");
   const [showForm, setShowForm] = useState(false);
 
@@ -38,26 +41,54 @@ export default function TechniquesTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs text-muted flex-1">
-          Checklist personnelle — pas un référentiel officiel de passage de
-          grade.
-        </p>
+      {/* Sub-tabs selector */}
+      <div className="flex bg-surface-2 p-1 rounded-full border border-border">
         <button
-          onClick={() => setShowForm((v) => !v)}
-          className="shrink-0 h-9 px-3 rounded-full bg-surface-2 border border-border font-semibold text-xs"
+          onClick={() => setMainTab("syllabus")}
+          className={`flex-1 py-1.5 rounded-full text-xs font-bold transition-all ${
+            mainTab === "syllabus"
+              ? "bg-accent text-white shadow-md"
+              : "text-muted hover:text-foreground"
+          }`}
         >
-          {showForm ? "Fermer" : "+ Technique"}
+          🥋 Syllabus par Ceintures
+        </button>
+        <button
+          onClick={() => setMainTab("gameplan")}
+          className={`flex-1 py-1.5 rounded-full text-xs font-bold transition-all ${
+            mainTab === "gameplan"
+              ? "bg-accent text-white shadow-md"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          ♟️ Mon Gameplan Tactique
         </button>
       </div>
 
-      <select
-        value={beltFilter}
-        onChange={(e) => setBeltFilter(e.target.value as Belt | "all")}
-        className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
-      >
-        <option value="all">Toutes les ceintures</option>
-        {BELT_ORDER.map((belt) => (
+      {mainTab === "gameplan" ? (
+        <GameplanTab />
+      ) : (
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted flex-1">
+              Checklist personnelle — pas un référentiel officiel de passage de
+              grade.
+            </p>
+            <button
+              onClick={() => setShowForm((v) => !v)}
+              className="shrink-0 h-9 px-3 rounded-full bg-surface-2 border border-border font-semibold text-xs"
+            >
+              {showForm ? "Fermer" : "+ Technique"}
+            </button>
+          </div>
+
+          <select
+            value={beltFilter}
+            onChange={(e) => setBeltFilter(e.target.value as Belt | "all")}
+            className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="all">Toutes les ceintures</option>
+            {BELT_ORDER.map((belt) => (
           <option key={belt} value={belt}>
             {BELT_LABELS[belt]}
           </option>
@@ -85,6 +116,8 @@ export default function TechniquesTab() {
           />
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 }
@@ -157,6 +190,7 @@ function TechniqueRow({
   onDelete: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   const [noteDraft, setNoteDraft] = useState(technique.notes ?? "");
   const [videoDraft, setVideoDraft] = useState(technique.videoUrl ?? "");
   const { isAdmin } = useAdmin();
@@ -175,6 +209,13 @@ function TechniqueRow({
 
   return (
     <div className="px-4 py-2.5">
+      {showVideoModal && technique.videoUrl && (
+        <VideoPreviewModal
+          url={technique.videoUrl}
+          title={technique.name}
+          onClose={() => setShowVideoModal(false)}
+        />
+      )}
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-3 text-left"
@@ -236,14 +277,13 @@ function TechniqueRow({
               className="flex-1 bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm"
             />
             {technique.videoUrl && (
-              <a
-                href={technique.videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 text-xs text-accent-2 font-medium whitespace-nowrap"
+              <button
+                type="button"
+                onClick={() => setShowVideoModal(true)}
+                className="shrink-0 px-2.5 py-1.5 bg-accent-2/20 hover:bg-accent-2 text-accent-2 hover:text-white rounded-lg text-xs font-semibold transition-all"
               >
-                ▶ Voir
-              </a>
+                ▶ Lecteur
+              </button>
             )}
           </div>
           {technique.custom && isAdmin && (
