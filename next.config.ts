@@ -8,12 +8,10 @@ import type { NextConfig } from "next";
 // à l'URL https://derkitoo.github.io/jjb/ — d'où le basePath fixe ci-dessous.
 // Pour builder en local à la racine (npm run dev), NEXT_BASE_PATH n'est pas
 // défini et basePath reste vide.
-const basePath = process.env.NEXT_BASE_PATH ?? "";
-const assetPrefix = basePath ? `${basePath}/` : "";
+const basePath = process.env.NEXT_BASE_PATH ?? "/jjb";
 
 const nextConfig: NextConfig = {
   output: "export",
-  assetPrefix,
   basePath,
 };
 
