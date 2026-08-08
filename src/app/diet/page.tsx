@@ -11,6 +11,8 @@ import {
 } from "@/lib/types";
 import MacrosTab from "@/components/MacrosTab";
 
+import { ShoppingListModal } from "@/components/ShoppingListModal";
+
 const CATEGORY_OPTIONS = Object.entries(RECIPE_CATEGORY_LABELS) as [
   RecipeCategory,
   string
@@ -70,6 +72,7 @@ function RecipesTab() {
   );
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showShoppingList, setShowShoppingList] = useState(false);
   const [view, setView] = useState<"liste" | "grille">("grille");
 
   const filtered = useMemo(() => {
@@ -87,11 +90,24 @@ function RecipesTab() {
 
   return (
     <div className="space-y-6">
+      {showShoppingList && (
+        <ShoppingListModal
+          recipes={recipes}
+          onClose={() => setShowShoppingList(false)}
+        />
+      )}
+
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted">
           {recipes.length} recette{recipes.length > 1 ? "s" : ""} healthy
         </p>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowShoppingList(true)}
+            className="shrink-0 h-10 px-3.5 rounded-full bg-accent-2/20 hover:bg-accent-2 border border-accent-2/40 text-accent-2 hover:text-white font-semibold text-xs transition-all active:scale-95 flex items-center gap-1.5"
+          >
+            🛒 Liste de Courses
+          </button>
           <div className="flex bg-surface-2 border border-border rounded-full p-0.5">
             <button
               onClick={() => setView("grille")}

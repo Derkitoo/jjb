@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useData } from "@/lib/data-context";
 import { Card } from "@/components/Card";
+import { WaterCutProtocolModal } from "./WaterCutProtocolModal";
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null;
@@ -21,6 +22,7 @@ export function WeightCutCard() {
   );
   const [notes, setNotes] = useState(weightCut.notes);
   const [saved, setSaved] = useState(false);
+  const [showProtocol, setShowProtocol] = useState(false);
 
   const days = daysUntil(weightCut.competitionDate);
   const latestWeight = weighIns[0]?.weightKg;
@@ -46,6 +48,14 @@ export function WeightCutCard() {
 
   return (
     <Card className="space-y-4">
+      {showProtocol && (
+        <WaterCutProtocolModal
+          onClose={() => setShowProtocol(false)}
+          targetWeightKg={weightCut.targetWeightKg}
+          competitionName={weightCut.competitionName}
+        />
+      )}
+
       {weightCut.competitionDate && (
         <div className="flex items-center justify-between gap-2 pb-3 border-b border-border">
           <div className="min-w-0">
@@ -82,6 +92,14 @@ export function WeightCutCard() {
           </div>
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={() => setShowProtocol(true)}
+        className="w-full py-2.5 px-4 bg-accent/10 hover:bg-accent/20 border border-accent/30 text-accent font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+      >
+        <span>💧 Voir le Protocole de Water Cut (J-6 à J-0)</span>
+      </button>
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <label className="text-sm block">
