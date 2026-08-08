@@ -163,6 +163,16 @@ export interface WeightCut {
   notes: string;
 }
 
+export interface Security {
+  // Code à 4 chiffres (ou plus) optionnel. Tant qu'il vaut null, tout le
+  // monde a un accès complet (aucune restriction). Une fois défini, l'accès
+  // "admin" (suppression, réinitialisation) doit être déverrouillé avec ce
+  // code — sinon l'app se comporte en mode visiteur (lecture + ajout only).
+  // ⚠️ Stocké en clair dans le localStorage : un simple frein contre les
+  // suppressions accidentelles par un visiteur, pas une vraie sécurité.
+  adminPin: string | null;
+}
+
 export interface AppData {
   sessions: TrainingSession[];
   recipes: Recipe[];
@@ -171,4 +181,5 @@ export interface AppData {
   goals: Goals;
   nutritionProfile: NutritionProfile;
   weightCut: WeightCut;
+  security: Security;
 }

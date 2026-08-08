@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useData } from "@/lib/data-context";
+import { useAdmin } from "@/lib/admin-context";
 import { Card } from "@/components/Card";
 import {
   BELT_LABELS,
@@ -158,6 +159,7 @@ function TechniqueRow({
   const [open, setOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState(technique.notes ?? "");
   const [videoDraft, setVideoDraft] = useState(technique.videoUrl ?? "");
+  const { isAdmin } = useAdmin();
 
   function saveNote() {
     if (noteDraft !== (technique.notes ?? "")) {
@@ -244,7 +246,7 @@ function TechniqueRow({
               </a>
             )}
           </div>
-          {technique.custom && (
+          {technique.custom && isAdmin && (
             <button
               onClick={() => onDelete(technique.id)}
               className="text-xs text-accent font-medium"

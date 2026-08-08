@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useData } from "@/lib/data-context";
+import { useAdmin } from "@/lib/admin-context";
 import { Card, SectionTitle } from "@/components/Card";
 import {
   SESSION_TYPE_LABELS,
@@ -213,6 +214,7 @@ function SessionRow({
   onDelete: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { isAdmin } = useAdmin();
   return (
     <Card>
       <button
@@ -250,12 +252,14 @@ function SessionRow({
               {session.notes}
             </p>
           )}
-          <button
-            onClick={onDelete}
-            className="text-xs text-accent font-medium mt-2"
-          >
-            Supprimer cette séance
-          </button>
+          {isAdmin && (
+            <button
+              onClick={onDelete}
+              className="text-xs text-accent font-medium mt-2"
+            >
+              Supprimer cette séance
+            </button>
+          )}
         </div>
       )}
     </Card>

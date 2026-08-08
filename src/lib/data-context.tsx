@@ -11,6 +11,7 @@ import {
   Goals,
   NutritionProfile,
   Recipe,
+  Security,
   Technique,
   TrainingSession,
   WeighIn,
@@ -41,6 +42,10 @@ const DEFAULT_WEIGHT_CUT: WeightCut = {
   notes: "",
 };
 
+const DEFAULT_SECURITY: Security = {
+  adminPin: null,
+};
+
 function emptyData(): AppData {
   return {
     sessions: [],
@@ -50,6 +55,7 @@ function emptyData(): AppData {
     goals: DEFAULT_GOALS,
     nutritionProfile: DEFAULT_NUTRITION_PROFILE,
     weightCut: DEFAULT_WEIGHT_CUT,
+    security: DEFAULT_SECURITY,
   };
 }
 
@@ -75,6 +81,7 @@ function readFromStorage(): AppData {
       goals: { ...DEFAULT_GOALS, ...parsed.goals },
       nutritionProfile: { ...DEFAULT_NUTRITION_PROFILE, ...parsed.nutritionProfile },
       weightCut: { ...DEFAULT_WEIGHT_CUT, ...parsed.weightCut },
+      security: { ...DEFAULT_SECURITY, ...parsed.security },
     };
   } catch {
     return emptyData();
@@ -150,6 +157,7 @@ interface DataContextValue {
   goals: Goals;
   nutritionProfile: NutritionProfile;
   weightCut: WeightCut;
+  security: Security;
   addSession: (s: Omit<TrainingSession, "id" | "createdAt">) => void;
   updateSession: (id: string, patch: Partial<TrainingSession>) => void;
   deleteSession: (id: string) => void;
@@ -165,6 +173,7 @@ interface DataContextValue {
   updateGoals: (patch: Partial<Goals>) => void;
   updateNutritionProfile: (patch: Partial<NutritionProfile>) => void;
   updateWeightCut: (patch: Partial<WeightCut>) => void;
+  setAdminPin: (pin: string | null) => void;
   exportData: () => void;
   importData: (json: string) => { ok: boolean; error?: string };
   resetData: () => void;
@@ -272,6 +281,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     mutate((d) => ({ ...d, weightCut: { ...d.weightCut, ...patch } }));
   }, []);
 
+  const setAdminPin = useCallback((pin: string | null) => {
+    mutate((d) => ({ ...d, security: { ...d.security, adminPin: pin } }));
+  }, []);
+
   const exportData = useCallback(() => {
     const blob = new Blob([JSON.stringify(currentData, null, 2)], {
       type: "application/json",
@@ -310,6 +323,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           ...parsed.nutritionProfile,
         },
         weightCut: { ...DEFAULT_WEIGHT_CUT, ...parsed.weightCut },
+        security: { ...DEFAULT_SECURITY, ...parsed.security },
       });
       return { ok: true };
     } catch {
@@ -330,6 +344,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     goals: data.goals,
     nutritionProfile: data.nutritionProfile,
     weightCut: data.weightCut,
+    security: data.security,
     addSession,
     updateSession,
     deleteSession,
@@ -345,6 +360,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateGoals,
     updateNutritionProfile,
     updateWeightCut,
+    setAdminPin,
     exportData,
     importData,
     resetData,

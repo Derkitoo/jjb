@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { DataProvider } from "@/lib/data-context";
+import { AdminProvider } from "@/lib/admin-context";
+import { TimerProvider } from "@/lib/timer-context";
 import NavBar from "@/components/NavBar";
+import TimerBanner from "@/components/TimerBanner";
 
 export const metadata: Metadata = {
   title: "BJJ Coach",
@@ -19,10 +22,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="fr" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <DataProvider>
-          <NavBar />
-          <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 pb-24 md:pb-10">
-            {children}
-          </main>
+          <AdminProvider>
+            <TimerProvider>
+              <NavBar />
+              <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 pb-24 md:pb-10">
+                {children}
+              </main>
+              <TimerBanner />
+            </TimerProvider>
+          </AdminProvider>
         </DataProvider>
       </body>
     </html>

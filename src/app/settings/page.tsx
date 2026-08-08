@@ -2,9 +2,11 @@
 
 import { useRef, useState } from "react";
 import { useData } from "@/lib/data-context";
+import { useAdmin } from "@/lib/admin-context";
 import { Card, SectionTitle } from "@/components/Card";
 import { WeightChart } from "@/components/WeightChart";
 import { WeightCutCard } from "@/components/WeightCutCard";
+import { AccessCard } from "@/components/AccessCard";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -22,6 +24,7 @@ export default function SettingsPage() {
     importData,
     resetData,
   } = useData();
+  const { isAdmin } = useAdmin();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [weightDate, setWeightDate] = useState(todayISO());
@@ -120,12 +123,14 @@ export default function SettingsPage() {
                     {new Date(w.date).toLocaleDateString("fr-FR")}
                   </span>
                   <span className="font-medium">{w.weightKg} kg</span>
-                  <button
-                    onClick={() => deleteWeighIn(w.id)}
-                    className="text-xs text-accent"
-                  >
-                    Suppr.
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => deleteWeighIn(w.id)}
+                      className="text-xs text-accent"
+                    >
+                      Suppr.
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -178,6 +183,11 @@ export default function SettingsPage() {
       </div>
 
       <div>
+        <h2 className="font-semibold mb-2">Accès</h2>
+        <AccessCard />
+      </div>
+
+      <div>
         <h2 className="font-semibold mb-2">Sauvegarde des données</h2>
         <Card className="space-y-3">
           <p className="text-sm text-muted">
@@ -215,7 +225,12 @@ export default function SettingsPage() {
       <div>
         <h2 className="font-semibold mb-2 text-accent">Zone danger</h2>
         <Card className="space-y-3">
-          {!confirmingReset ? (
+          {!isAdmin ? (
+            <p className="text-sm text-muted">
+              Mode visiteur : réservé à l&apos;admin. Déverrouille dans la
+              section Accès ci-dessus.
+            </p>
+          ) : !confirmingReset ? (
             <button
               onClick={() => setConfirmingReset(true)}
               className="text-sm text-accent font-medium"

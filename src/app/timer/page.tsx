@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useData } from "@/lib/data-context";
+import { useTimer } from "@/lib/timer-context";
 import { Card, SectionTitle } from "@/components/Card";
-import { playFinish, playGo, playRestStart, playTick } from "@/lib/beep";
 
 function formatTime(ms: number) {
   const totalSec = Math.max(0, Math.ceil(ms / 1000));
@@ -12,9 +12,7 @@ function formatTime(ms: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-type Phase = "idle" | "prep" | "work" | "rest" | "done";
-
-const PHASE_LABEL: Record<Phase, string> = {
+const PHASE_LABEL: Record<string, string> = {
   idle: "Prêt",
   prep: "Préparation",
   work: "Round",
@@ -55,118 +53,27 @@ export default function TimerPage() {
 
 function RoundTimer() {
   const { addSession } = useData();
-  const [rounds, setRounds] = useState(5);
-  const [workMin, setWorkMin] = useState(5);
-  const [restMin, setRestMin] = useState(1);
-  const [prepSec, setPrepSec] = useState(10);
-
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [currentRound, setCurrentRound] = useState(1);
-  const [remainingMs, setRemainingMs] = useState(0);
-  const [running, setRunning] = useState(false);
+  const {
+    config,
+    setConfig,
+    phase,
+    currentRound,
+    remainingMs,
+    roundRunning,
+    startRoundTimer,
+    pauseRoundTimer,
+    resetRoundTimer,
+  } = useTimer();
+  const { rounds, workMin, restMin, prepSec } = config;
   const [saved, setSaved] = useState(false);
-
-  const phaseEndAtRef = useRef<number | null>(null);
-  const lastTickSecondRef = useRef<number | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const workMs = workMin * 60 * 1000;
-  const restMs = restMin * 60 * 1000;
-  const prepMs = prepSec * 1000;
-
-  function advancePhase() {
-    setPhase((prevPhase) => {
-      if (prevPhase === "prep") {
-        playGo();
-        phaseEndAtRef.current = Date.now() + workMs;
-        setRemainingMs(workMs);
-        lastTickSecondRef.current = null;
-        return "work";
-      }
-      if (prevPhase === "work") {
-        const isLastRound = currentRound >= rounds;
-        if (isLastRound) {
-          playFinish();
-          setRunning(false);
-          setRemainingMs(0);
-          return "done";
-        }
-        playRestStart();
-        phaseEndAtRef.current = Date.now() + restMs;
-        setRemainingMs(restMs);
-        lastTickSecondRef.current = null;
-        return "rest";
-      }
-      if (prevPhase === "rest") {
-        playGo();
-        setCurrentRound((r) => r + 1);
-        phaseEndAtRef.current = Date.now() + workMs;
-        setRemainingMs(workMs);
-        lastTickSecondRef.current = null;
-        return "work";
-      }
-      return prevPhase;
-    });
-  }
-
-  useEffect(() => {
-    if (!running) return;
-    intervalRef.current = setInterval(() => {
-      const endAt = phaseEndAtRef.current;
-      if (endAt == null) return;
-      const remaining = endAt - Date.now();
-      if (remaining <= 0) {
-        advancePhase();
-      } else {
-        setRemainingMs(remaining);
-        const sec = Math.ceil(remaining / 1000);
-        if (
-          sec <= 3 &&
-          sec >= 1 &&
-          lastTickSecondRef.current !== sec &&
-          (phase === "work" || phase === "rest" || phase === "prep")
-        ) {
-          lastTickSecondRef.current = sec;
-          playTick();
-        }
-      }
-    }, 100);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, phase]);
 
   function handleStart() {
     setSaved(false);
-    if (phase === "idle" || phase === "done") {
-      setCurrentRound(1);
-      const initial = prepMs > 0 ? "prep" : "work";
-      phaseEndAtRef.current = Date.now() + (prepMs > 0 ? prepMs : workMs);
-      setRemainingMs(prepMs > 0 ? prepMs : workMs);
-      setPhase(initial);
-    } else if (phaseEndAtRef.current == null) {
-      // resuming from pause
-      phaseEndAtRef.current = Date.now() + remainingMs;
-    }
-    lastTickSecondRef.current = null;
-    setRunning(true);
-  }
-
-  function handlePause() {
-    setRunning(false);
-    if (phaseEndAtRef.current != null) {
-      setRemainingMs(Math.max(0, phaseEndAtRef.current - Date.now()));
-    }
-    phaseEndAtRef.current = null;
+    startRoundTimer();
   }
 
   function handleReset() {
-    setRunning(false);
-    phaseEndAtRef.current = null;
-    setPhase("idle");
-    setCurrentRound(1);
-    setRemainingMs(0);
+    resetRoundTimer();
     setSaved(false);
   }
 
@@ -182,6 +89,9 @@ function RoundTimer() {
     setSaved(true);
   }
 
+  const workMs = workMin * 60 * 1000;
+  const restMs = restMin * 60 * 1000;
+  const prepMs = prepSec * 1000;
   const totalPhaseMs =
     phase === "prep" ? prepMs : phase === "rest" ? restMs : workMs;
   const progress =
@@ -194,28 +104,28 @@ function RoundTimer() {
           <NumberField
             label="Nombre de rounds"
             value={rounds}
-            onChange={setRounds}
+            onChange={(v) => setConfig({ rounds: v })}
             min={1}
             max={20}
           />
           <NumberField
             label="Durée d'un round (min)"
             value={workMin}
-            onChange={setWorkMin}
+            onChange={(v) => setConfig({ workMin: v })}
             min={1}
             max={20}
           />
           <NumberField
             label="Repos entre rounds (min)"
             value={restMin}
-            onChange={setRestMin}
+            onChange={(v) => setConfig({ restMin: v })}
             min={0}
             max={10}
           />
           <NumberField
             label="Préparation avant le 1er round (sec)"
             value={prepSec}
-            onChange={setPrepSec}
+            onChange={(v) => setConfig({ prepSec: v })}
             min={0}
             max={60}
             step={5}
@@ -255,7 +165,7 @@ function RoundTimer() {
         )}
 
         <div className="flex gap-3 mt-2">
-          {!running && phase !== "done" && (
+          {!roundRunning && phase !== "done" && (
             <button
               onClick={handleStart}
               className="h-12 px-8 rounded-full bg-accent text-white font-semibold"
@@ -263,9 +173,9 @@ function RoundTimer() {
               {phase === "idle" ? "Démarrer" : "Reprendre"}
             </button>
           )}
-          {running && (
+          {roundRunning && (
             <button
-              onClick={handlePause}
+              onClick={pauseRoundTimer}
               className="h-12 px-8 rounded-full bg-surface-2 border border-border font-semibold"
             >
               Pause
@@ -344,34 +254,21 @@ function NumberField({
 
 function FreeStopwatch() {
   const { addSession } = useData();
-  const [elapsedMs, setElapsedMs] = useState(0);
-  const [running, setRunning] = useState(false);
+  const {
+    elapsedMs,
+    stopwatchRunning,
+    startStopwatch,
+    pauseStopwatch,
+    resetStopwatch,
+  } = useTimer();
   const [saved, setSaved] = useState(false);
-  const startRef = useRef<number | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (!running) return;
-    intervalRef.current = setInterval(() => {
-      if (startRef.current == null) return;
-      setElapsedMs(Date.now() - startRef.current);
-    }, 250);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [running]);
 
   function handleStart() {
     setSaved(false);
-    startRef.current = Date.now() - elapsedMs;
-    setRunning(true);
-  }
-  function handlePause() {
-    setRunning(false);
+    startStopwatch();
   }
   function handleReset() {
-    setRunning(false);
-    setElapsedMs(0);
+    resetStopwatch();
     setSaved(false);
   }
   function handleSave() {
@@ -399,7 +296,7 @@ function FreeStopwatch() {
         {String(m).padStart(2, "0")}:{String(s).padStart(2, "0")}
       </div>
       <div className="flex gap-3">
-        {!running ? (
+        {!stopwatchRunning ? (
           <button
             onClick={handleStart}
             className="h-12 px-8 rounded-full bg-accent text-white font-semibold"
@@ -408,7 +305,7 @@ function FreeStopwatch() {
           </button>
         ) : (
           <button
-            onClick={handlePause}
+            onClick={pauseStopwatch}
             className="h-12 px-8 rounded-full bg-surface-2 border border-border font-semibold"
           >
             Pause
@@ -421,7 +318,7 @@ function FreeStopwatch() {
           Réinitialiser
         </button>
       </div>
-      {elapsedMs > 0 && !running && (
+      {elapsedMs > 0 && !stopwatchRunning && (
         <button
           onClick={handleSave}
           disabled={saved}

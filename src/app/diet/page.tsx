@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useData } from "@/lib/data-context";
+import { useAdmin } from "@/lib/admin-context";
 import { Card, SectionTitle } from "@/components/Card";
 import {
   Recipe,
@@ -14,6 +15,22 @@ const CATEGORY_OPTIONS = Object.entries(RECIPE_CATEGORY_LABELS) as [
   RecipeCategory,
   string
 ][];
+
+const CATEGORY_EMOJI: Record<RecipeCategory, string> = {
+  "petit-dejeuner": "🍳",
+  dejeuner: "🥗",
+  diner: "🍽️",
+  collation: "🍎",
+  "post-training": "🥤",
+};
+
+const CATEGORY_TINT: Record<RecipeCategory, string> = {
+  "petit-dejeuner": "bg-amber-500/15",
+  dejeuner: "bg-emerald-500/15",
+  diner: "bg-indigo-500/15",
+  collation: "bg-pink-500/15",
+  "post-training": "bg-sky-500/15",
+};
 
 export default function DietPage() {
   const [tab, setTab] = useState<"recettes" | "macros">("recettes");
@@ -53,6 +70,7 @@ function RecipesTab() {
   );
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [view, setView] = useState<"liste" | "grille">("grille");
 
   const filtered = useMemo(() => {
     return recipes.filter((r) => {
@@ -73,12 +91,34 @@ function RecipesTab() {
         <p className="text-sm text-muted">
           {recipes.length} recette{recipes.length > 1 ? "s" : ""} healthy
         </p>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="shrink-0 h-10 px-4 rounded-full bg-accent-2 text-white font-semibold text-sm"
-        >
-          {showForm ? "Fermer" : "+ Recette"}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-surface-2 border border-border rounded-full p-0.5">
+            <button
+              onClick={() => setView("grille")}
+              aria-label="Vue grille"
+              className={`h-8 w-8 rounded-full text-sm transition-colors ${
+                view === "grille" ? "bg-accent-2 text-white" : "text-muted"
+              }`}
+            >
+              ▦
+            </button>
+            <button
+              onClick={() => setView("liste")}
+              aria-label="Vue liste"
+              className={`h-8 w-8 rounded-full text-sm transition-colors ${
+                view === "liste" ? "bg-accent-2 text-white" : "text-muted"
+              }`}
+            >
+              ☰
+            </button>
+          </div>
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="shrink-0 h-10 px-4 rounded-full bg-accent-2 text-white font-semibold text-sm"
+          >
+            {showForm ? "Fermer" : "+ Recette"}
+          </button>
+        </div>
       </div>
 
       <input
@@ -114,19 +154,72 @@ function RecipesTab() {
         />
       )}
 
-      <div className="space-y-2">
-        {filtered.length === 0 && (
-          <Card className="text-sm text-muted">Aucune recette ici.</Card>
-        )}
-        {filtered.map((r) => (
-          <RecipeRow
-            key={r.id}
-            recipe={r}
-            onToggleFavorite={() => toggleFavorite(r.id)}
-            onDelete={() => deleteRecipe(r.id)}
-          />
-        ))}
+      {filtered.length === 0 ? (
+        <Card className="text-sm text-muted">Aucune recette ici.</Card>
+      ) : view === "grille" ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {filtered.map((r) => (
+            <RecipeGridCard
+              key={r.id}
+              recipe={r}
+              onToggleFavorite={() => toggleFavorite(r.id)}
+              onDelete={() => deleteRecipe(r.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((r) => (
+            <RecipeRow
+              key={r.id}
+              recipe={r}
+              onToggleFavorite={() => toggleFavorite(r.id)}
+              onDelete={() => deleteRecipe(r.id)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RecipeDetail({
+  recipe,
+  onDelete,
+}: {
+  recipe: Recipe;
+  onDelete: () => void;
+}) {
+  const { isAdmin } = useAdmin();
+  return (
+    <div className="text-sm space-y-3">
+      <div className="grid grid-cols-4 gap-2 text-center">
+        <MacroChip label="kcal" value={recipe.kcal} />
+        <MacroChip label="Prot" value={`${recipe.protein}g`} />
+        <MacroChip label="Gluc" value={`${recipe.carbs}g`} />
+        <MacroChip label="Lip" value={`${recipe.fat}g`} />
       </div>
+      <div>
+        <div className="text-muted mb-1 font-medium">Ingrédients</div>
+        <ul className="list-disc list-inside space-y-0.5">
+          {recipe.ingredients.map((ing, i) => (
+            <li key={i}>{ing}</li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <div className="text-muted mb-1 font-medium">Préparation</div>
+        <ol className="list-decimal list-inside space-y-0.5">
+          {recipe.steps.map((step, i) => (
+            <li key={i}>{step}</li>
+          ))}
+        </ol>
+      </div>
+      {isAdmin && (
+        <button onClick={onDelete} className="text-xs text-accent font-medium">
+          Supprimer cette recette
+        </button>
+      )}
     </div>
   );
 }
@@ -170,32 +263,55 @@ function RecipeRow({
         </button>
       </div>
       {open && (
-        <div className="mt-3 pt-3 border-t border-border text-sm space-y-3">
-          <div className="grid grid-cols-4 gap-2 text-center">
-            <MacroChip label="kcal" value={recipe.kcal} />
-            <MacroChip label="Prot" value={`${recipe.protein}g`} />
-            <MacroChip label="Gluc" value={`${recipe.carbs}g`} />
-            <MacroChip label="Lip" value={`${recipe.fat}g`} />
+        <div className="mt-3 pt-3 border-t border-border">
+          <RecipeDetail recipe={recipe} onDelete={onDelete} />
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function RecipeGridCard({
+  recipe,
+  onToggleFavorite,
+  onDelete,
+}: {
+  recipe: Recipe;
+  onToggleFavorite: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card
+      className={`p-0 overflow-hidden relative ${
+        open ? "col-span-2 sm:col-span-3" : ""
+      }`}
+    >
+      <button
+        onClick={onToggleFavorite}
+        aria-label="Favori"
+        className="absolute top-2 right-2 z-10 text-lg drop-shadow"
+      >
+        {recipe.favorite ? "⭐" : "☆"}
+      </button>
+      <button onClick={() => setOpen((v) => !v)} className="w-full text-left">
+        <div
+          className={`h-20 flex items-center justify-center text-4xl ${CATEGORY_TINT[recipe.category]}`}
+        >
+          {CATEGORY_EMOJI[recipe.category]}
+        </div>
+        <div className="p-3">
+          <div className="text-sm font-medium leading-snug line-clamp-2">
+            {recipe.name}
           </div>
-          <div>
-            <div className="text-muted mb-1 font-medium">Ingrédients</div>
-            <ul className="list-disc list-inside space-y-0.5">
-              {recipe.ingredients.map((ing, i) => (
-                <li key={i}>{ing}</li>
-              ))}
-            </ul>
+          <div className="text-xs text-muted mt-1">
+            {recipe.kcal} kcal · {recipe.prepMinutes} min
           </div>
-          <div>
-            <div className="text-muted mb-1 font-medium">Préparation</div>
-            <ol className="list-decimal list-inside space-y-0.5">
-              {recipe.steps.map((step, i) => (
-                <li key={i}>{step}</li>
-              ))}
-            </ol>
-          </div>
-          <button onClick={onDelete} className="text-xs text-accent font-medium">
-            Supprimer cette recette
-          </button>
+        </div>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 pt-1 border-t border-border">
+          <RecipeDetail recipe={recipe} onDelete={onDelete} />
         </div>
       )}
     </Card>
