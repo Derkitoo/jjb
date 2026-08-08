@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useData } from "@/lib/data-context";
 import { Card, SectionTitle } from "@/components/Card";
 import { useAdmin } from "@/lib/admin-context";
+import { playAudioFile } from "@/lib/speech";
 
 interface Routine {
   id: string;
@@ -76,11 +77,23 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function formatTimer(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 export default function WorkoutPage() {
   const { ready, workoutSessions, addWorkoutSession, deleteWorkoutSession, exercisePRs, updateExercisePR } = useData();
   const { isAdmin } = useAdmin();
   const [activeTab, setActiveTab] = useState<"routines" | "prs" | "log">("routines");
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
+
+  // Live Routine Timer States
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerSec, setTimerSec] = useState(0);
+  const [timerTotalSec, setTimerTotalSec] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Form states for manual log
   const [title, setTitle] = useState("Renforcement Musculaire BJJ");
@@ -95,6 +108,58 @@ export default function WorkoutPage() {
   const [prWeight, setPrWeight] = useState("");
   const [prReps, setPrReps] = useState("");
   const [showPrModal, setShowPrModal] = useState(false);
+
+  // Timer interval effect
+  useEffect(() => {
+    if (timerRunning) {
+      timerRef.current = setInterval(() => {
+        setTimerSec((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current!);
+            setTimerRunning(false);
+            playAudioFile("dbz-finish.mp3");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [timerRunning]);
+
+  function startRoutineTimer(r: Routine) {
+    const sec = r.durationMin * 60;
+    setTimerTotalSec(sec);
+    setTimerSec(sec);
+    setTimerRunning(true);
+    playAudioFile("dbz-round-start.mp3");
+  }
+
+  function stopAndSaveRoutineTimer(r: Routine) {
+    setTimerRunning(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    const elapsedSec = timerTotalSec - timerSec;
+    const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+
+    addWorkoutSession({
+      date: todayISO(),
+      title: `Séance : ${r.title}`,
+      durationMin: elapsedMin,
+      intensity: 4,
+      exercises: r.exercises.map((e) => ({ name: e.name, sets: 3, reps: 10 })),
+      notes: `Chrono effectué : ${formatTimer(elapsedSec)} / ${formatTimer(timerTotalSec)}.`,
+    });
+
+    setTimerSec(0);
+    setTimerTotalSec(0);
+    setSelectedRoutine(null);
+    setActiveTab("log");
+  }
 
   if (!ready) return <p className="text-muted text-sm">Chargement…</p>;
 
@@ -140,7 +205,7 @@ export default function WorkoutPage() {
           className="shrink-0 h-10 px-4 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all"
         >
           <span>⏱️</span>
-          <span>Lancer un Chrono</span>
+          <span>Chrono DBZ</span>
         </Link>
       </div>
 
@@ -196,7 +261,7 @@ export default function WorkoutPage() {
             ))}
           </div>
 
-          {/* Routine Detail Modal / Drawer */}
+          {/* Routine Detail & Interactive Timer Card */}
           {selectedRoutine && (
             <Card className="space-y-4 border-accent/40 bg-surface-2/60">
               <div className="flex items-center justify-between">
@@ -205,12 +270,60 @@ export default function WorkoutPage() {
                   <span>{selectedRoutine.title}</span>
                 </div>
                 <button
-                  onClick={() => setSelectedRoutine(null)}
+                  onClick={() => {
+                    setTimerRunning(false);
+                    setSelectedRoutine(null);
+                  }}
                   className="text-xs text-muted hover:text-foreground"
                 >
                   Fermer ✕
                 </button>
               </div>
+
+              {/* Interactive Live Timer */}
+              {timerTotalSec > 0 ? (
+                <div className="p-4 rounded-2xl bg-surface border border-accent/40 text-center space-y-3 shadow-lg">
+                  <span className="text-xs font-bold text-accent uppercase tracking-wider">
+                    ⏱️ Chrono d&apos;Exercice En Cours
+                  </span>
+                  <div className="text-4xl font-black text-foreground font-mono">
+                    {formatTimer(timerSec)}
+                  </div>
+
+                  <div className="w-full bg-surface-2 h-2 rounded-full overflow-hidden border border-border">
+                    <div
+                      className="bg-accent h-full transition-all duration-1000"
+                      style={{
+                        width: `${((timerTotalSec - timerSec) / timerTotalSec) * 100}%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex gap-2 justify-center pt-2">
+                    <button
+                      onClick={() => setTimerRunning((v) => !v)}
+                      className="px-4 py-2 rounded-full bg-surface-2 border border-border text-foreground text-xs font-bold active:scale-95"
+                    >
+                      {timerRunning ? "⏸ Pause" : "▶ Reprendre"}
+                    </button>
+                    <button
+                      onClick={() => stopAndSaveRoutineTimer(selectedRoutine)}
+                      className="px-5 py-2 rounded-full bg-accent text-white text-xs font-bold shadow-md shadow-accent/20 active:scale-95"
+                    >
+                      ✓ Enregistrer la Séance dans mon Journal
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startRoutineTimer(selectedRoutine)}
+                    className="flex-1 h-10 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs shadow-md shadow-amber-500/20 transition-transform active:scale-95"
+                  >
+                    ⏱️ Lancer le Chrono ({selectedRoutine.durationMin} min)
+                  </button>
+                </div>
+              )}
 
               <div className="space-y-2.5">
                 {selectedRoutine.exercises.map((ex, i) => (
@@ -224,16 +337,18 @@ export default function WorkoutPage() {
                 ))}
               </div>
 
-              <button
-                onClick={() => {
-                  setTitle(`Séance : ${selectedRoutine.title}`);
-                  setDurationMin(selectedRoutine.durationMin);
-                  setShowLogForm(true);
-                }}
-                className="w-full h-10 rounded-full bg-accent text-white font-bold text-xs shadow-md shadow-accent/20 transition-transform active:scale-95"
-              >
-                ✓ Enregistrer cette Séance dans mon Journal
-              </button>
+              {timerTotalSec === 0 && (
+                <button
+                  onClick={() => {
+                    setTitle(`Séance : ${selectedRoutine.title}`);
+                    setDurationMin(selectedRoutine.durationMin);
+                    setShowLogForm(true);
+                  }}
+                  className="w-full h-10 rounded-full bg-accent text-white font-bold text-xs shadow-md shadow-accent/20 transition-transform active:scale-95"
+                >
+                  ✓ Enregistrer Manuellement sans Chrono
+                </button>
+              )}
             </Card>
           )}
         </div>
