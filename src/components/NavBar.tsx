@@ -17,8 +17,8 @@ export default function NavBar() {
 
   return (
     <>
-      {/* Barre du haut (desktop) */}
-      <header className="hidden md:flex items-center justify-between px-6 py-4 border-b border-border bg-surface/60 backdrop-blur sticky top-0 z-40">
+      {/* Barre du haut (desktop >= 1024px) */}
+      <header className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-border bg-surface/60 backdrop-blur sticky top-0 z-40">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg">
           <span className="text-accent">火</span>
           <span>BJJ Coach</span>
@@ -44,8 +44,8 @@ export default function NavBar() {
         </nav>
       </header>
 
-      {/* Barre du bas (mobile) */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+      {/* Barre du bas (mobile & foldables < 1024px) */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <ul className="grid grid-cols-6">
           {ITEMS.map((item) => {
             const active = pathname === item.href;

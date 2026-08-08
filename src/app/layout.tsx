@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AdminProvider>
             <TimerProvider>
               <NavBar />
-              <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 pb-24 md:pb-10">
+              <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 pb-24 lg:pb-10">
                 {children}
               </main>
               <TimerBanner />
