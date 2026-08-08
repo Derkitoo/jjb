@@ -120,7 +120,7 @@ export default function DashboardPage() {
           <span className="text-lg">⏱️</span> Chrono
         </Link>
         <Link
-          href="/techniques"
+          href="/gameplan"
           className="rounded-2xl bg-surface-2 border border-border text-center font-semibold py-3.5 text-xs md:text-sm hover:bg-surface transition-colors flex flex-col items-center justify-center gap-1"
         >
           <span className="text-lg">♟️</span> Gameplan

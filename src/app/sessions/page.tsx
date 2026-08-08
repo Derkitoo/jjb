@@ -19,32 +19,13 @@ function todayISO() {
 }
 
 export default function SessionsPage() {
-  const [tab, setTab] = useState<"historique" | "techniques">("historique");
   return (
     <div className="space-y-6">
       <SectionTitle
-        title="Séances"
-        subtitle="Ton historique d'entraînement et ta progression technique"
+        title="Journal de Séances 🥋"
+        subtitle="Historique de tes entraînements, durée, intensité et résultats de sparring"
       />
-      <div className="flex gap-2 bg-surface-2 border border-border rounded-full p-1">
-        <button
-          onClick={() => setTab("historique")}
-          className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors ${
-            tab === "historique" ? "bg-accent text-white" : "text-muted"
-          }`}
-        >
-          Historique
-        </button>
-        <button
-          onClick={() => setTab("techniques")}
-          className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors ${
-            tab === "techniques" ? "bg-accent text-white" : "text-muted"
-          }`}
-        >
-          Techniques
-        </button>
-      </div>
-      {tab === "historique" ? <HistoryTab /> : <TechniquesTab />}
+      <HistoryTab />
     </div>
   );
 }

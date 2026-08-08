@@ -33,7 +33,6 @@ const CATEGORY_OPTIONS = Object.entries(TECHNIQUE_CATEGORY_LABELS) as [
 export default function TechniquesTab() {
   const { techniques, updateTechnique, addTechnique, deleteTechnique } =
     useData();
-  const [mainTab, setMainTab] = useState<"syllabus" | "gameplan">("syllabus");
   const [beltFilter, setBeltFilter] = useState<Belt | "all">("all");
   const [showForm, setShowForm] = useState(false);
 
@@ -41,35 +40,7 @@ export default function TechniquesTab() {
 
   return (
     <div className="space-y-4">
-      {/* Sub-tabs selector */}
-      <div className="flex bg-surface-2 p-1 rounded-full border border-border">
-        <button
-          onClick={() => setMainTab("syllabus")}
-          className={`flex-1 py-1.5 rounded-full text-xs font-bold transition-all ${
-            mainTab === "syllabus"
-              ? "bg-accent text-white shadow-md"
-              : "text-muted hover:text-foreground"
-          }`}
-        >
-          🥋 Syllabus par Ceintures
-        </button>
-        <button
-          onClick={() => setMainTab("gameplan")}
-          className={`flex-1 py-1.5 rounded-full text-xs font-bold transition-all ${
-            mainTab === "gameplan"
-              ? "bg-accent text-white shadow-md"
-              : "text-muted hover:text-foreground"
-          }`}
-        >
-          ♟️ Mon Gameplan Tactique
-        </button>
-      </div>
-
-      {mainTab === "gameplan" ? (
-        <GameplanTab />
-      ) : (
-        <>
-          <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
             <p className="text-xs text-muted flex-1">
               Checklist personnelle — pas un référentiel officiel de passage de
               grade.
@@ -116,8 +87,6 @@ export default function TechniquesTab() {
           />
         ))}
       </div>
-        </>
-      )}
     </div>
   );
 }
