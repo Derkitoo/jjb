@@ -5,13 +5,17 @@ import { useData } from "@/lib/data-context";
 import { useAdmin } from "@/lib/admin-context";
 import { Card } from "@/components/Card";
 import { GAMEPLAN_STEP_LABELS, GameplanNode, GameplanStepType } from "@/lib/types";
-import { VideoPreviewModal } from "./VideoPreviewModal";
+import { GameplanTree } from "./GameplanTree";
+import { VideoEmbedModal } from "./VideoEmbedModal";
 
 export function GameplanTab() {
-  const { gameplanNodes, addGameplanNode, deleteGameplanNode } = useData();
+  const { gameplanNodes, addGameplanNode, updateGameplanNode, deleteGameplanNode } = useData();
   const { isAdmin } = useAdmin();
 
+  const [viewMode, setViewMode] = useState<"tree" | "list">("tree");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingNode, setEditingNode] = useState<GameplanNode | null>(null);
+
   const [title, setTitle] = useState("");
   const [type, setType] = useState<GameplanStepType>("position");
   const [parentId, setParentId] = useState<string>("");
@@ -20,22 +24,49 @@ export function GameplanTab() {
 
   const [previewVideo, setPreviewVideo] = useState<{ url: string; title: string } | null>(null);
 
+  function openFormWithParent(parent: string) {
+    setParentId(parent);
+    setShowAddForm(true);
+    setEditingNode(null);
+  }
+
+  function openEditForm(node: GameplanNode) {
+    setEditingNode(node);
+    setTitle(node.title);
+    setType(node.type);
+    setParentId(node.parentId || "");
+    setNotes(node.notes || "");
+    setVideoUrl(node.videoUrl || "");
+    setShowAddForm(true);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
 
-    addGameplanNode({
-      title: title.trim(),
-      type,
-      parentId: parentId ? parentId : null,
-      notes: notes.trim() || undefined,
-      videoUrl: videoUrl.trim() || undefined,
-    });
+    if (editingNode) {
+      updateGameplanNode(editingNode.id, {
+        title: title.trim(),
+        type,
+        parentId: parentId ? parentId : null,
+        notes: notes.trim() || undefined,
+        videoUrl: videoUrl.trim() || undefined,
+      });
+    } else {
+      addGameplanNode({
+        title: title.trim(),
+        type,
+        parentId: parentId ? parentId : null,
+        notes: notes.trim() || undefined,
+        videoUrl: videoUrl.trim() || undefined,
+      });
+    }
 
     setTitle("");
     setNotes("");
     setVideoUrl("");
     setParentId("");
+    setEditingNode(null);
     setShowAddForm(false);
   }
 
@@ -59,16 +90,45 @@ export function GameplanTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold">Arbre de Décision / Gameplan ♟️</h2>
-          <p className="text-xs text-muted">
-            Construis tes enchaînements tactiques : *Position ➔ Transition ➔ Soumission*.
-          </p>
+      {previewVideo && (
+        <VideoEmbedModal
+          title={previewVideo.title}
+          videoUrl={previewVideo.url}
+          onClose={() => setPreviewVideo(null)}
+        />
+      )}
+
+      {/* Top Header & Mode Toggle */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex gap-2 bg-surface-2 border border-border rounded-full p-1">
+          <button
+            onClick={() => setViewMode("tree")}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              viewMode === "tree" ? "bg-accent text-white shadow-md" : "text-muted"
+            }`}
+          >
+            🌳 Arbre Visuel (Flowchart)
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              viewMode === "list" ? "bg-accent text-white shadow-md" : "text-muted"
+            }`}
+          >
+            📋 Vue Liste
+          </button>
         </div>
+
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="px-4 py-2 bg-accent hover:bg-accent/90 text-white font-semibold text-xs rounded-full shadow-md transition-all shrink-0"
+          onClick={() => {
+            setEditingNode(null);
+            setTitle("");
+            setNotes("");
+            setVideoUrl("");
+            setParentId("");
+            setShowAddForm(!showAddForm);
+          }}
+          className="px-4 py-2 bg-accent hover:bg-accent/90 text-white font-semibold text-xs rounded-full shadow-md transition-all shrink-0 active:scale-95"
         >
           {showAddForm ? "Fermer" : "+ Ajouter une étape"}
         </button>
@@ -76,7 +136,9 @@ export function GameplanTab() {
 
       {showAddForm && (
         <Card className="space-y-4 border border-accent/30 bg-surface">
-          <h3 className="font-semibold text-sm">Ajouter une étape au Gameplan</h3>
+          <h3 className="font-semibold text-sm">
+            {editingNode ? "Éditer l'étape" : "Ajouter une étape au Gameplan"}
+          </h3>
           <form onSubmit={handleSubmit} className="space-y-3 text-sm">
             <div>
               <label className="block text-xs text-muted mb-1">Titre de la technique / position</label>
@@ -124,7 +186,18 @@ export function GameplanTab() {
             </div>
 
             <div>
-              <label className="block text-xs text-muted mb-1">Lien Vidéo YouTube / Instagram (Optionnel)</label>
+              <label className="block text-xs text-muted mb-1">Notes & Conseils tactiques</label>
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Ex: Contrôler la cheville avec la main gauche, pousser le genou..."
+                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-muted mb-1">Lien Vidéo YouTube (Démonstration)</label>
               <input
                 type="url"
                 value={videoUrl}
@@ -134,131 +207,149 @@ export function GameplanTab() {
               />
             </div>
 
-            <div>
-              <label className="block text-xs text-muted mb-1">Notes & Conseils d&apos;exécution</label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-                placeholder="Détails importants, grips, pièges..."
-                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
-              />
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="px-4 py-2 rounded-full text-xs font-semibold text-muted hover:bg-surface-2"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-accent hover:bg-accent/90 text-white font-semibold text-xs rounded-full shadow-md transition-all active:scale-95"
+              >
+                {editingNode ? "Enregistrer les modifications" : "Ajouter au Gameplan"}
+              </button>
             </div>
-
-            <button
-              type="submit"
-              className="w-full py-2.5 bg-accent hover:bg-accent/90 text-white font-semibold rounded-full shadow-md transition-all text-xs"
-            >
-              Enregistrer dans le Gameplan
-            </button>
           </form>
         </Card>
       )}
 
-      {rootNodes.length === 0 ? (
-        <Card className="text-center py-8 text-muted text-sm space-y-2">
-          <p>Aucun enchaînement dans ton Gameplan pour l&apos;instant.</p>
-          <p className="text-xs">Ajoute tes séquences préférées pour visualiser ton style de jeu.</p>
-        </Card>
+      {/* Main View: Tree vs List */}
+      {viewMode === "tree" ? (
+        <GameplanTree
+          nodes={gameplanNodes}
+          onAddChildNode={openFormWithParent}
+          onEditNode={openEditForm}
+          onDeleteNode={deleteGameplanNode}
+          isAdmin={isAdmin}
+        />
       ) : (
         <div className="space-y-4">
-          {rootNodes.map((root) => (
-            <GameplanNodeTree
-              key={root.id}
-              node={root}
-              getChildren={getChildren}
-              STEP_TYPE_STYLES={STEP_TYPE_STYLES}
-              STEP_TYPE_BADGES={STEP_TYPE_BADGES}
-              isAdmin={isAdmin}
-              onDelete={deleteGameplanNode}
-              onOpenVideo={(url, title) => setPreviewVideo({ url, title })}
-            />
-          ))}
+          {rootNodes.length === 0 ? (
+            <Card className="text-center py-8">
+              <p className="text-sm text-muted">Aucune position de départ dans ton Gameplan.</p>
+            </Card>
+          ) : (
+            rootNodes.map((rootNode) => (
+              <RenderNodeTree
+                key={rootNode.id}
+                node={rootNode}
+                getChildren={getChildren}
+                onAddChild={openFormWithParent}
+                onEditNode={openEditForm}
+                onDeleteNode={deleteGameplanNode}
+                onOpenVideo={(url, title) => setPreviewVideo({ url, title })}
+                isAdmin={isAdmin}
+                styles={STEP_TYPE_STYLES}
+                badges={STEP_TYPE_BADGES}
+              />
+            ))
+          )}
         </div>
-      )}
-
-      {previewVideo && (
-        <VideoPreviewModal
-          url={previewVideo.url}
-          title={previewVideo.title}
-          onClose={() => setPreviewVideo(null)}
-        />
       )}
     </div>
   );
 }
 
-interface GameplanNodeTreeProps {
-  node: GameplanNode;
-  getChildren: (id: string) => GameplanNode[];
-  STEP_TYPE_STYLES: Record<GameplanStepType, string>;
-  STEP_TYPE_BADGES: Record<GameplanStepType, string>;
-  isAdmin: boolean;
-  onDelete: (id: string) => void;
-  onOpenVideo: (url: string, title: string) => void;
-  depth?: number;
-}
-
-function GameplanNodeTree({
+function RenderNodeTree({
   node,
   getChildren,
-  STEP_TYPE_STYLES,
-  STEP_TYPE_BADGES,
-  isAdmin,
-  onDelete,
+  onAddChild,
+  onEditNode,
+  onDeleteNode,
   onOpenVideo,
+  isAdmin,
+  styles,
+  badges,
   depth = 0,
-}: GameplanNodeTreeProps) {
+}: {
+  node: GameplanNode;
+  getChildren: (id: string) => GameplanNode[];
+  onAddChild: (id: string) => void;
+  onEditNode: (node: GameplanNode) => void;
+  onDeleteNode: (id: string) => void;
+  onOpenVideo: (url: string, title: string) => void;
+  isAdmin: boolean;
+  styles: Record<GameplanStepType, string>;
+  badges: Record<GameplanStepType, string>;
+  depth?: number;
+}) {
   const children = getChildren(node.id);
 
   return (
-    <div className={`space-y-2 ${depth > 0 ? "ml-4 pl-4 border-l-2 border-border/60" : ""}`}>
-      <Card className="p-3.5 space-y-2 bg-surface hover:border-accent/40 transition-colors">
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STEP_TYPE_STYLES[node.type]}`}>
-                {STEP_TYPE_BADGES[node.type]}
-              </span>
-              <h4 className="font-bold text-sm text-foreground">{node.title}</h4>
-            </div>
-            {node.notes && <p className="text-xs text-muted">{node.notes}</p>}
+    <div className={`space-y-2 ${depth > 0 ? "ml-4 sm:ml-6 pl-3 border-l-2 border-border" : ""}`}>
+      <Card className="p-3.5 flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${styles[node.type]}`}
+            >
+              {badges[node.type]}
+            </span>
+            <span className="font-bold text-sm text-foreground">{node.title}</span>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             {node.videoUrl && (
               <button
                 onClick={() => onOpenVideo(node.videoUrl!, node.title)}
-                className="px-2.5 py-1 bg-accent/20 hover:bg-accent text-accent hover:text-white rounded-full text-xs font-semibold transition-all flex items-center gap-1"
+                className="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full text-xs font-semibold flex items-center gap-1"
               >
-                ▶ Vidéo
+                <span>🎥</span> Vidéo
               </button>
             )}
+            <button
+              onClick={() => onAddChild(node.id)}
+              className="px-2 py-1 bg-surface-2 hover:bg-border text-xs rounded-full font-semibold transition-colors"
+            >
+              + Suite
+            </button>
+            <button
+              onClick={() => onEditNode(node)}
+              className="p-1 text-muted hover:text-foreground text-xs"
+            >
+              ✏️
+            </button>
             {isAdmin && (
               <button
-                onClick={() => onDelete(node.id)}
-                className="text-xs text-muted hover:text-accent p-1 transition-colors"
-                title="Supprimer l'étape"
+                onClick={() => onDeleteNode(node.id)}
+                className="p-1 text-rose-400 hover:text-rose-300 text-xs"
               >
                 ✕
               </button>
             )}
           </div>
         </div>
+
+        {node.notes && <p className="text-xs text-muted leading-relaxed">{node.notes}</p>}
       </Card>
 
       {children.length > 0 && (
-        <div className="space-y-2 pt-1">
+        <div className="space-y-2">
           {children.map((child) => (
-            <GameplanNodeTree
+            <RenderNodeTree
               key={child.id}
               node={child}
               getChildren={getChildren}
-              STEP_TYPE_STYLES={STEP_TYPE_STYLES}
-              STEP_TYPE_BADGES={STEP_TYPE_BADGES}
-              isAdmin={isAdmin}
-              onDelete={onDelete}
+              onAddChild={onAddChild}
+              onEditNode={onEditNode}
+              onDeleteNode={onDeleteNode}
               onOpenVideo={onOpenVideo}
+              isAdmin={isAdmin}
+              styles={styles}
+              badges={badges}
               depth={depth + 1}
             />
           ))}

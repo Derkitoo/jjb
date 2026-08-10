@@ -15,7 +15,7 @@ import {
   TechniqueCategory,
 } from "@/lib/types";
 import { GameplanTab } from "./GameplanTab";
-import { VideoPreviewModal } from "./VideoPreviewModal";
+import { VideoEmbedModal } from "./VideoEmbedModal";
 
 const STATUS_ORDER: MasteryStatus[] = ["a_decouvrir", "en_cours", "maitrisee"];
 
@@ -179,8 +179,8 @@ function TechniqueRow({
   return (
     <div className="px-4 py-2.5">
       {showVideoModal && technique.videoUrl && (
-        <VideoPreviewModal
-          url={technique.videoUrl}
+        <VideoEmbedModal
+          videoUrl={technique.videoUrl}
           title={technique.name}
           onClose={() => setShowVideoModal(false)}
         />
