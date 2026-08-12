@@ -1,7 +1,8 @@
-const CACHE_NAME = "bjj-coach-v2";
+const CACHE_NAME = "bjj-coach-v3";
 const ASSETS_TO_CACHE = [
   "/jjb/",
   "/jjb/sessions",
+  "/jjb/workout",
   "/jjb/gameplan",
   "/jjb/timer",
   "/jjb/diet",
@@ -12,14 +13,12 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch(() => {
-        // Ignore individual failing requests on dynamic routes during build
-      });
+      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -40,21 +39,28 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  // Network-First for HTML Navigation Page Requests to ensure immediate PWA freshness
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => cached || caches.match("/jjb/"));
+        })
+    );
+    return;
+  }
+
+  // Stale-While-Revalidate for Static Assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached, update in background
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
-            }
-          })
-          .catch(() => {});
-        return cachedResponse;
-      }
-
-      return fetch(event.request)
+      const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
             const responseClone = networkResponse.clone();
@@ -62,10 +68,8 @@ self.addEventListener("fetch", (event) => {
           }
           return networkResponse;
         })
-        .catch(() => {
-          // Offline fallback
-          return caches.match("/jjb/");
-        });
+        .catch(() => {});
+      return cachedResponse || fetchPromise;
     })
   );
 });
